@@ -14,3 +14,5 @@ events
 events.tau_pt #für Unterordner tau_pt
 events.run3_dnn_moe_hh #für Unterordner: Zuordnung der Wahrscheinlichkeit für hh laut DNN
 
+
+source ~/.bash_profile
