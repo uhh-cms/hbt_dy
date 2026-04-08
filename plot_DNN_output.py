@@ -82,7 +82,7 @@ for i in [1,2,3]:
 
 
 #3. wie 1, aber tt wird zum stack hinzugefügt
-for i in [1,2,3]:
+for i in [1,2,3]: #i steht für den channel
     dy.fill(x=events_dy.run3_dnn_moe_hh[(events_dy.channel_id == i) & (events_dy.gen_ll_pdgid == 11)],Zerfallskanal=r"gen: DY $\to e^+e^-$", weight=events_dy.event_weight[(events_dy.channel_id == i) & (events_dy.gen_ll_pdgid == 11)])    #maske für channel (und bei dy Zerfallskanal) in eckigen Klammern
     dy.fill(x=events_dy.run3_dnn_moe_hh[(events_dy.channel_id == i) & (events_dy.gen_ll_pdgid == 13)],Zerfallskanal=r"gen: DY $\to \mu^+\mu^-$", weight=events_dy.event_weight[(events_dy.channel_id == i) & (events_dy.gen_ll_pdgid == 13)])
     dy.fill(x=events_dy.run3_dnn_moe_hh[(events_dy.channel_id == i) & (events_dy.gen_ll_pdgid == 15)],Zerfallskanal=r"gen: DY $\to \tau^+\tau^-$", weight=events_dy.event_weight[(events_dy.channel_id == i) & (events_dy.gen_ll_pdgid == 15)])
@@ -113,8 +113,51 @@ for i in [1,2,3]:
     hh.reset()
 
 
+#grouped bar chart for seeing which DY subprocesses go to which channel
+    categories = [r"gen: DY $\to e^+e^-$", r"gen: DY $\to \mu^+\mu^-$", r"gen: DY $\to \tau^+\tau^-$"]
+    channel_1 = np.array([]) #channel 1 werte (jeweils linker balken)
+    channel_2 = np.array([])
+    channel_3 = np.array([])
+
+    dictionary={"channel_1":channel_1,"channel_2":channel_2,"channel_3":channel_3}
+
+    #Channel arrays mit information füllen
+    for channel in [1,2,3]:
+        for Zerfallskanal in [11,13,15]:
+            dictionary[f"channel_{channel}"]=np.append(dictionary[f"channel_{channel}"],len(events_dy.run3_dnn_moe_hh[(events_dy.channel_id == channel) & (events_dy.gen_ll_pdgid == Zerfallskanal)]))
+
+    x = np.arange(len(categories))  # Positionen der Gruppen    
+    width = 0.2  # Breite der einzelnen Balken
+
+    #plotten
+    plt.bar(x - width, dictionary["channel_1"], width, label='e tau (chan.1)')
+    plt.bar(x, dictionary["channel_2"], width, label='mu tau (chan.2)')
+    plt.bar(x + width, dictionary["channel_3"], width, label='tau tau (chan.3)') 
+    plt.xticks(x, categories)
+    plt.legend()
+    plt.ylabel("Events assigned to channel")
+    plt.xlabel("Drell-Yan-Subprocess")
+    plt.title("Channel assignment of the different DY-subprocesses")
+    plt.savefig("plots/grouped_bar-chart_DY-subprocesses/DY_channel-assignent.png", dpi=300, bbox_inches='tight')
+    plt.figure()
+
+    #nochmal logarithmisch plotten
+    plt.bar(x - width, dictionary["channel_1"], width, label='e tau (chan.1)')
+    plt.bar(x, dictionary["channel_2"], width, label='mu tau (chan.2)')
+    plt.bar(x + width, dictionary["channel_3"], width, label='tau tau (chan.3)') 
+    plt.yscale('log')    #Achse logarithmisch skalieren
+    plt.xticks(x, categories)
+    plt.legend()
+    plt.ylabel("Events assigned to channel")
+    plt.xlabel("Drell-Yan-Subprocess")
+    plt.title("Channel assignment of the different DY-subprocesses")
+    plt.savefig("plots/grouped_bar-chart_DY-subprocesses/DY_channel-assignent_log.png", dpi=300, bbox_inches='tight')
+    plt.figure()
+
+    print("länge des 1. Zerfallskanal, 1. channel:",len(events_dy.run3_dnn_moe_hh[(events_dy.channel_id == 1) & (events_dy.gen_ll_pdgid == 11)]))
+    print("länge des 1. Zerfallskanal, 2. channel:",len(events_dy.run3_dnn_moe_hh[(events_dy.channel_id == 2) & (events_dy.gen_ll_pdgid == 11)]))
+    print("länge des 1. Zerfallskanal, 3. channel:",len(events_dy.run3_dnn_moe_hh[(events_dy.channel_id == 3) & (events_dy.gen_ll_pdgid == 11)]))
 
 #channel zuordnungen 1: e tau, 2: mu tau, 3: tau tau
 
-#to do: migration plot von dy type zu den channels
 
