@@ -124,7 +124,7 @@ for i in [1,2,3]: #i steht für den channel
     #Channel arrays mit information füllen
     for channel in [1,2,3]:
         for Zerfallskanal in [11,13,15]:
-            dictionary[f"channel_{channel}"]=np.append(dictionary[f"channel_{channel}"],len(events_dy.run3_dnn_moe_hh[(events_dy.channel_id == channel) & (events_dy.gen_ll_pdgid == Zerfallskanal)]))
+            dictionary[f"channel_{channel}"]=np.append(dictionary[f"channel_{channel}"],np.sum(events_dy.event_weight[(events_dy.channel_id == channel) & (events_dy.gen_ll_pdgid == Zerfallskanal)]))
 
     x = np.arange(len(categories))  # Positionen der Gruppen    
     width = 0.2  # Breite der einzelnen Balken
@@ -161,3 +161,6 @@ for i in [1,2,3]: #i steht für den channel
 #channel zuordnungen 1: e tau, 2: mu tau, 3: tau tau
 
 
+#weights hinzugefügt
+#tau tau weiter unterteilen (in e,mu,hadronisch für beide tau)
+#Weights für events_dy.run3_dnn_moe_hh  :  events_dy.event_weight
