@@ -8,8 +8,19 @@ events_dy = ak.from_parquet("/data/dust/user/wolfmor/hh2bbtautau/vincent/dy_22pr
 events_tt = ak.from_parquet("/data/dust/user/wolfmor/hh2bbtautau/vincent/tt_22pre_v14.parquet")  # tt simulation data
 events_hh = ak.from_parquet("/data/dust/user/wolfmor/hh2bbtautau/vincent/hh_22pre_v14.parquet")  # hh simulation data
 
+#Histogramme definieren, 2-D für dy wegen Unterteilung
+dy = Hist(
+    hist.axis.StrCategory([], name="Zerfallskanal", growth=True),  #diese Achse wird später gestacked
+    hist.axis.Regular(bins=100, start=0, stop=1, name="x")
+)
+tt = Hist(hist.axis.Regular(bins=100, start=0, stop=1, name="x"))
+hh = Hist(hist.axis.Regular(bins=100, start=0, stop=1, name="x"))
 
-#5. grouped bar chart for seeing which DY subprocesses go to which channel, tau-tau-channel weiter unterteilt in Zerfallsart
+#Namen der decay channel definieren:
+channelname=["e-tau", "mu-tau", "tau-tau"]
+channelname_r=[r"$\tau_e\tau_h$",r"$\tau_\mu\tau_h$",r"$\tau_h\tau_h$"]
+
+
 #array mit anzahl der el bzw pos pro zerfall (Zahl zwischen 0 und 2)
 maske_el = (events_dy.gen_dy_tau_decayproducts == 11)
 zahlen_array_el = maske_el*1
@@ -43,55 +54,48 @@ hadron_number=np.ones([np.sum(events_dy.gen_ll_pdgid == 15)]) *2 - el_number - m
 #Zwischenergebnis (3dim. array, dass jedem event #el,#mu,#tau zerfälle zuordnet)
 tau_zerfallskanäle=np.array([el_number,mu_number,hadron_number])
 
-categories = [r"$e^+e^-$", r"$\mu^+\mu^-$", r"$\tau_e\tau_e$", r"$\tau_\mu\tau_\mu$", r"$\tau_h\tau_h$", r"$\tau_e\tau_\mu$", r"$\tau_e\tau_h$", r"$\tau_\mu\tau_h$"]
-channel_1 = np.array([]) #channel 1 werte (jeweils linker balken)
-channel_2 = np.array([])
-channel_3 = np.array([])
+#6. stacked hist weiter in subprozesse unterteilen (tau tau weiter unterteilen wie bei 5. im bar chart)
+for i in [1,2,3]: #i steht für den channel
+    dy.fill(x=events_dy.run3_dnn_moe_hh[(events_dy.channel_id == i) & (events_dy.gen_ll_pdgid == 11)],Zerfallskanal=r"$e^+e^-$", weight=events_dy.event_weight[(events_dy.channel_id == i) & (events_dy.gen_ll_pdgid == 11)])    #maske für channel (und bei dy Zerfallskanal) in eckigen Klammern
+    dy.fill(x=events_dy.run3_dnn_moe_hh[(events_dy.channel_id == i) & (events_dy.gen_ll_pdgid == 13)],Zerfallskanal=r"$\mu^+\mu^-$", weight=events_dy.event_weight[(events_dy.channel_id == i) & (events_dy.gen_ll_pdgid == 13)])
 
-dictionary={"channel_1":channel_1,"channel_2":channel_2,"channel_3":channel_3}
 
-#Channel arrays mit information füllen
-for channel in [1,2,3]:
-    for Zerfallskanal in [11,13]:
-        dictionary[f"channel_{channel}"]=np.append(dictionary[f"channel_{channel}"],np.sum(events_dy.event_weight[(events_dy.channel_id == channel) & (events_dy.gen_ll_pdgid == Zerfallskanal)]))
-    #Channel arrays für Zerfallskanal 15 auch:
-    dictionary[f"channel_{channel}"]=np.append(dictionary[f"channel_{channel}"],np.sum(events_dy.event_weight[(events_dy.gen_ll_pdgid == 15)][(events_dy.channel_id[events_dy.gen_ll_pdgid == 15] == channel) & (tau_zerfallskanäle[0]==2) & (tau_zerfallskanäle[1]==0) & (tau_zerfallskanäle[2]==0)])) #achtung, verschachtelte Masken. manche masken redundant
-    dictionary[f"channel_{channel}"]=np.append(dictionary[f"channel_{channel}"],np.sum(events_dy.event_weight[(events_dy.gen_ll_pdgid == 15)][(events_dy.channel_id[events_dy.gen_ll_pdgid == 15] == channel) & (tau_zerfallskanäle[0]==0) & (tau_zerfallskanäle[1]==2) & (tau_zerfallskanäle[2]==0)]))
-    dictionary[f"channel_{channel}"]=np.append(dictionary[f"channel_{channel}"],np.sum(events_dy.event_weight[(events_dy.gen_ll_pdgid == 15)][(events_dy.channel_id[events_dy.gen_ll_pdgid == 15] == channel) & (tau_zerfallskanäle[0]==0) & (tau_zerfallskanäle[1]==0) & (tau_zerfallskanäle[2]==2)]))
-    dictionary[f"channel_{channel}"]=np.append(dictionary[f"channel_{channel}"],np.sum(events_dy.event_weight[(events_dy.gen_ll_pdgid == 15)][(events_dy.channel_id[events_dy.gen_ll_pdgid == 15] == channel) & (tau_zerfallskanäle[0]==1) & (tau_zerfallskanäle[1]==1) & (tau_zerfallskanäle[2]==0)]))
-    dictionary[f"channel_{channel}"]=np.append(dictionary[f"channel_{channel}"],np.sum(events_dy.event_weight[(events_dy.gen_ll_pdgid == 15)][(events_dy.channel_id[events_dy.gen_ll_pdgid == 15] == channel) & (tau_zerfallskanäle[0]==1) & (tau_zerfallskanäle[1]==0) & (tau_zerfallskanäle[2]==1)]))
-    dictionary[f"channel_{channel}"]=np.append(dictionary[f"channel_{channel}"],np.sum(events_dy.event_weight[(events_dy.gen_ll_pdgid == 15)][(events_dy.channel_id[events_dy.gen_ll_pdgid == 15] == channel) & (tau_zerfallskanäle[0]==0) & (tau_zerfallskanäle[1]==1) & (tau_zerfallskanäle[2]==1)]))
-#Reihenfolge: el, mu, hadr
-#Reihenfolge categories: e,mu,hadr,e+mu,e+hadr,mu+hadr
+    dy.fill(x=events_dy.run3_dnn_moe_hh[(events_dy.gen_ll_pdgid == 15)][(events_dy.channel_id[events_dy.gen_ll_pdgid == 15] == i) & (tau_zerfallskanäle[0]==2) & (tau_zerfallskanäle[1]==0) & (tau_zerfallskanäle[2]==0)],Zerfallskanal=r"$\tau_e\tau_e$", weight=events_dy.event_weight[(events_dy.gen_ll_pdgid == 15)][(events_dy.channel_id[events_dy.gen_ll_pdgid == 15] == i) & (tau_zerfallskanäle[0]==2) & (tau_zerfallskanäle[1]==0) & (tau_zerfallskanäle[2]==0)])
+    dy.fill(x=events_dy.run3_dnn_moe_hh[(events_dy.gen_ll_pdgid == 15)][(events_dy.channel_id[events_dy.gen_ll_pdgid == 15] == i) & (tau_zerfallskanäle[0]==0) & (tau_zerfallskanäle[1]==2) & (tau_zerfallskanäle[2]==0)],Zerfallskanal=r"$\tau_\mu\tau_\mu$", weight=events_dy.event_weight[(events_dy.gen_ll_pdgid == 15)][(events_dy.channel_id[events_dy.gen_ll_pdgid == 15] == i) & (tau_zerfallskanäle[0]==0) & (tau_zerfallskanäle[1]==2) & (tau_zerfallskanäle[2]==0)])
+    dy.fill(x=events_dy.run3_dnn_moe_hh[(events_dy.gen_ll_pdgid == 15)][(events_dy.channel_id[events_dy.gen_ll_pdgid == 15] == i) & (tau_zerfallskanäle[0]==0) & (tau_zerfallskanäle[1]==0) & (tau_zerfallskanäle[2]==2)],Zerfallskanal=r"$\tau_h\tau_h$", weight=events_dy.event_weight[(events_dy.gen_ll_pdgid == 15)][(events_dy.channel_id[events_dy.gen_ll_pdgid == 15] == i) & (tau_zerfallskanäle[0]==0) & (tau_zerfallskanäle[1]==0) & (tau_zerfallskanäle[2]==2)])
+    dy.fill(x=events_dy.run3_dnn_moe_hh[(events_dy.gen_ll_pdgid == 15)][(events_dy.channel_id[events_dy.gen_ll_pdgid == 15] == i) & (tau_zerfallskanäle[0]==1) & (tau_zerfallskanäle[1]==1) & (tau_zerfallskanäle[2]==0)],Zerfallskanal=r"$\tau_e\tau_\mu$", weight=events_dy.event_weight[(events_dy.gen_ll_pdgid == 15)][(events_dy.channel_id[events_dy.gen_ll_pdgid == 15] == i) & (tau_zerfallskanäle[0]==1) & (tau_zerfallskanäle[1]==1) & (tau_zerfallskanäle[2]==0)])
+    dy.fill(x=events_dy.run3_dnn_moe_hh[(events_dy.gen_ll_pdgid == 15)][(events_dy.channel_id[events_dy.gen_ll_pdgid == 15] == i) & (tau_zerfallskanäle[0]==1) & (tau_zerfallskanäle[1]==0) & (tau_zerfallskanäle[2]==1)],Zerfallskanal=r"$\tau_e\tau_h$", weight=events_dy.event_weight[(events_dy.gen_ll_pdgid == 15)][(events_dy.channel_id[events_dy.gen_ll_pdgid == 15] == i) & (tau_zerfallskanäle[0]==1) & (tau_zerfallskanäle[1]==0) & (tau_zerfallskanäle[2]==1)])
+    dy.fill(x=events_dy.run3_dnn_moe_hh[(events_dy.gen_ll_pdgid == 15)][(events_dy.channel_id[events_dy.gen_ll_pdgid == 15] == i) & (tau_zerfallskanäle[0]==0) & (tau_zerfallskanäle[1]==1) & (tau_zerfallskanäle[2]==1)],Zerfallskanal=r"$\tau_\mu\tau_h$", weight=events_dy.event_weight[(events_dy.gen_ll_pdgid == 15)][(events_dy.channel_id[events_dy.gen_ll_pdgid == 15] == i) & (tau_zerfallskanäle[0]==0) & (tau_zerfallskanäle[1]==1) & (tau_zerfallskanäle[2]==1)])
 
-x = np.arange(len(categories))  # Positionen der Gruppen    
-width = 0.2  # Breite der einzelnen Balken
 
-#plotten
-plt.figure(figsize=(15, 6))
-plt.bar(x - width, dictionary["channel_1"], width, label=r'$\tau_e\tau_h$')
-plt.bar(x, dictionary["channel_2"], width, label=r'$\tau_\mu\tau_h$')
-plt.bar(x + width, dictionary["channel_3"], width, label=r'$\tau_h\tau_h$') 
-plt.xticks(x, categories)
-plt.legend()
-plt.ylabel("Events assigned to channel")
-plt.xlabel("gen: DY-subprocesses")
-plt.figtext(0.1, 0.01,r"Different gen: DY decay-channels and their assignment to higgs decay-channels. The $gen: DY\to \tau_h\tau_h$-channel is further segmented into the $\tau$ decay-modes")
-plt.title("Channel assignment of the different DY-subprocesses")
-plt.savefig("plots/grouped_bar-chart_DY-subprocesses/further_disection/DY_channel-assignent.png", dpi=300, bbox_inches='tight')
-plt.figure()
+    dy.fill(x=events_tt.run3_dnn_moe_hh[events_tt.channel_id == i],Zerfallskanal=r"$t\bar{t}$", weight=events_tt.event_weight[events_tt.channel_id == i])
 
-#nochmal logarithmisch plotten
-plt.figure(figsize=(15, 6))
-plt.bar(x - width, dictionary["channel_1"], width, label=r'$\tau_e\tau_h$')
-plt.bar(x, dictionary["channel_2"], width, label=r'$\tau_\mu\tau_h$')
-plt.bar(x + width, dictionary["channel_3"], width, label=r'$\tau_h\tau_h$') 
-plt.yscale('log')    #Achse logarithmisch skalieren
-plt.xticks(x, categories)
-plt.legend()
-plt.ylabel("Events assigned to channel")
-plt.xlabel("gen: DY-subprocesses")
-plt.figtext(0.1, 0.01,r"Different gen: DY decay-channels and their assignment to higgs decay-channels. The $gen: DY\to \tau_h\tau_h$-channel is further segmented into the $\tau$ decay-modes")
-plt.title("Channel assignment of the different DY-subprocesses")
-plt.savefig("plots/grouped_bar-chart_DY-subprocesses/further_disection/DY_channel-assignent_log.png", dpi=300, bbox_inches='tight')
-plt.figure()
+    hh.fill(events_hh.run3_dnn_moe_hh[events_hh.channel_id == i],weight=events_hh.event_weight[events_hh.channel_id == i])
+
+    plt.yscale('log')    #Achse logarithmisch skalieren 
+
+    # Stack-Plot erstellen
+    stack = dy.stack("Zerfallskanal") #technically zerfallskanal+tt als korrekter name
+    stack.plot(stack=True, histtype="fill") # 'stack=True' ist entscheidend!
+
+    hh.plot(label=r"$HH$")
+
+    plt.legend()
+    plt.ylabel("number of events (weighted)")
+    plt.xlabel("Di-Higgs-outputnode of the DNN")
+    plt.title(f"Histogram of DNN-outputnode $HH$ for dy,tt and hh simulatioins - {channelname_r[i-1]}-channel")
+    plt.savefig(f"plots/hist_hhnode_stacked-tt/further_subdivision/{channelname[i-1]}-channel.png", dpi=300, bbox_inches='tight')
+    plt.figure()
+
+    #histogramme für nächste iteration clearen
+    dy.reset()
+    tt.reset()
+    hh.reset()
+
+
+
+
+
+
+#to do: stacked hist weiter unterteilen in subprozesse (wie zuvor) (tt entfernen)
+#hists für category_ids statt channels machen (siehe mattermost)
