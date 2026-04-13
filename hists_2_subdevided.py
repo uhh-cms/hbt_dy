@@ -54,7 +54,9 @@ hadron_number=np.ones([np.sum(events_dy.gen_ll_pdgid == 15)]) *2 - el_number - m
 #Zwischenergebnis (3dim. array, dass jedem event #el,#mu,#tau zerfälle zuordnet)
 tau_zerfallskanäle=np.array([el_number,mu_number,hadron_number])
 
-#6. stacked hist weiter in subprozesse unterteilen (tau tau weiter unterteilen wie bei 5. im bar chart)
+
+
+#6.1 stacked hist weiter in subprozesse unterteilen (tau tau weiter unterteilen wie bei 5. im bar chart)
 for i in [1,2,3]: #i steht für den channel
     dy.fill(x=events_dy.run3_dnn_moe_hh[(events_dy.channel_id == i) & (events_dy.gen_ll_pdgid == 11)],Zerfallskanal=r"$e^+e^-$", weight=events_dy.event_weight[(events_dy.channel_id == i) & (events_dy.gen_ll_pdgid == 11)])    #maske für channel (und bei dy Zerfallskanal) in eckigen Klammern
     dy.fill(x=events_dy.run3_dnn_moe_hh[(events_dy.channel_id == i) & (events_dy.gen_ll_pdgid == 13)],Zerfallskanal=r"$\mu^+\mu^-$", weight=events_dy.event_weight[(events_dy.channel_id == i) & (events_dy.gen_ll_pdgid == 13)])
@@ -93,9 +95,34 @@ for i in [1,2,3]: #i steht für den channel
     hh.reset()
 
 
+#7.2 hists für category_ids statt channels
+# for i in [1,2,3,4,5,6]: #i steht für category ids
+#     dy.fill(x=events_dy.run3_dnn_moe_hh[(events_dy.channel_id == i) & (events_dy.gen_ll_pdgid == 11)],Zerfallskanal=r"gen: DY $\to e^+e^-$", weight=events_dy.event_weight[(events_dy.channel_id == i) & (events_dy.gen_ll_pdgid == 11)])    #maske für channel (und bei dy Zerfallskanal) in eckigen Klammern
+#     dy.fill(x=events_dy.run3_dnn_moe_hh[(events_dy.channel_id == i) & (events_dy.gen_ll_pdgid == 13)],Zerfallskanal=r"gen: DY $\to \mu^+\mu^-$", weight=events_dy.event_weight[(events_dy.channel_id == i) & (events_dy.gen_ll_pdgid == 13)])
+#     dy.fill(x=events_dy.run3_dnn_moe_hh[(events_dy.channel_id == i) & (events_dy.gen_ll_pdgid == 15)],Zerfallskanal=r"gen: DY $\to \tau^+\tau^-$", weight=events_dy.event_weight[(events_dy.channel_id == i) & (events_dy.gen_ll_pdgid == 15)])
+#     dy.fill(x=events_tt.run3_dnn_moe_hh[events_tt.channel_id == i],Zerfallskanal=r"$t\bar{t}$", weight=events_tt.event_weight[events_tt.channel_id == i])
+
+#     hh.fill(events_hh.run3_dnn_moe_hh[events_hh.channel_id == i],weight=events_hh.event_weight[events_hh.channel_id == i])
+
+#     plt.yscale('log')    #Achse logarithmisch skalieren 
+
+#     # Stack-Plot erstellen
+#     stack = dy.stack("Zerfallskanal") #technically zerfallskanal+tt als korrekter name
+#     stack.plot(stack=True, histtype="fill") # 'stack=True' ist entscheidend!
+
+#     hh.plot(label=r"$HH$")
+
+#     plt.legend()
+#     plt.ylabel("number of events (weighted)")
+#     plt.xlabel("Di-Higgs-outputnode of the DNN")
+#     plt.title(f"Histogram of DNN-outputnode $HH$ for dy,tt and hh simulatioins - {channelname_r[i-1]}-channel")
+#     plt.savefig(f"plots/hist_hhnode_stacked-tt/channel_unterteilung/{channelname[i-1]}-channel.png", dpi=300, bbox_inches='tight')
+#     plt.figure()
+
+#     #histogramme für nächste iteration clearen
+#     dy.reset()
+#     tt.reset()
+#     hh.reset()
 
 
-
-
-#to do: stacked hist weiter unterteilen in subprozesse (wie zuvor) (tt entfernen)
-#hists für category_ids statt channels machen (siehe mattermost)
+#to do: masken benenne(übersichtlicher), generell sachen benennen, neue python files anlegen (nicht alles in der gleichen), hists für category_ids statt channels machen (siehe mattermost)
