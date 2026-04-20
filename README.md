@@ -16,3 +16,6 @@ events.run3_dnn_moe_hh #für Unterordner: Zuordnung der Wahrscheinlichkeit für 
 
 
 source ~/.bash_profile
+
+packete installieren über sandboxes/*txt
+cf_sandbox sandboxname

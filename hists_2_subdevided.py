@@ -97,19 +97,19 @@ for i in [1,2,3]: #i steht für den channel
 
 #7.2 hists für category_ids statt channels
 #masken erstellen
-
+IDs=["etau__res1b__os__iso","etau__res2b__os__iso","mutau__res1b__os__iso","mutau__res2b__os__iso","tautau__res1b__os__iso","tautau__res2b__os__iso"]
 dy = Hist(
     hist.axis.StrCategory([], name="Zerfallskanal", growth=True),  #diese Achse wird später gestacked
     hist.axis.Regular(bins=100, start=0, stop=1, name="x")
 )
 
-for i in [147,151,175,179,203,207]: #i steht für category ids
-    dy.fill(x=events_dy.run3_dnn_moe_hh[ak.any(events_dy.category_ids == i,axis=1) & (events_dy.gen_ll_pdgid == 11)],Zerfallskanal=r"$e^+e^-$", weight=events_dy.event_weight[ak.any(events_dy.category_ids == i,axis=1) & (events_dy.gen_ll_pdgid == 11)])    #maske für channel (und bei dy Zerfallskanal) in eckigen Klammern
-    dy.fill(x=events_dy.run3_dnn_moe_hh[ak.any(events_dy.category_ids == i,axis=1) & (events_dy.gen_ll_pdgid == 13)],Zerfallskanal=r"$\mu^+\mu^-$", weight=events_dy.event_weight[ak.any(events_dy.category_ids == i,axis=1) & (events_dy.gen_ll_pdgid == 13)])
-    dy.fill(x=events_dy.run3_dnn_moe_hh[ak.any(events_dy.category_ids == i,axis=1) & (events_dy.gen_ll_pdgid == 15)],Zerfallskanal=r"$\tau^+\tau^-$", weight=events_dy.event_weight[ak.any(events_dy.category_ids == i,axis=1) & (events_dy.gen_ll_pdgid == 15)])
-    dy.fill(x=events_tt.run3_dnn_moe_hh[ak.any(events_tt.category_ids == i,axis=1)],Zerfallskanal=r"$t\bar{t}$", weight=events_tt.event_weight[ak.any(events_tt.category_ids == i,axis=1)])
+for i,id in enumerate([147,151,175,179,203,207],start=0): #id steht für category ids, i ist index
+    dy.fill(x=events_dy.run3_dnn_moe_hh[ak.any(events_dy.category_ids == id,axis=1) & (events_dy.gen_ll_pdgid == 11)],Zerfallskanal=r"$e^+e^-$", weight=events_dy.event_weight[ak.any(events_dy.category_ids == id,axis=1) & (events_dy.gen_ll_pdgid == 11)])    #maske für channel (und bei dy Zerfallskanal) in eckigen Klammern
+    dy.fill(x=events_dy.run3_dnn_moe_hh[ak.any(events_dy.category_ids == id,axis=1) & (events_dy.gen_ll_pdgid == 13)],Zerfallskanal=r"$\mu^+\mu^-$", weight=events_dy.event_weight[ak.any(events_dy.category_ids == id,axis=1) & (events_dy.gen_ll_pdgid == 13)])
+    dy.fill(x=events_dy.run3_dnn_moe_hh[ak.any(events_dy.category_ids == id,axis=1) & (events_dy.gen_ll_pdgid == 15)],Zerfallskanal=r"$\tau^+\tau^-$", weight=events_dy.event_weight[ak.any(events_dy.category_ids == id,axis=1) & (events_dy.gen_ll_pdgid == 15)])
+    dy.fill(x=events_tt.run3_dnn_moe_hh[ak.any(events_tt.category_ids == id,axis=1)],Zerfallskanal=r"$t\bar{t}$", weight=events_tt.event_weight[ak.any(events_tt.category_ids == id,axis=1)])
 
-    hh.fill(events_hh.run3_dnn_moe_hh[ak.any(events_hh.category_ids == i,axis=1)],weight=events_hh.event_weight[ak.any(events_hh.category_ids == i,axis=1)])
+    hh.fill(events_hh.run3_dnn_moe_hh[ak.any(events_hh.category_ids == id,axis=1)],weight=events_hh.event_weight[ak.any(events_hh.category_ids == id,axis=1)])
 
     plt.yscale('log')    #Achse logarithmisch skalieren 
 
@@ -122,13 +122,12 @@ for i in [147,151,175,179,203,207]: #i steht für category ids
     plt.legend()
     plt.ylabel("number of events (weighted)")
     plt.xlabel("Di-Higgs-outputnode of the DNN")
-    plt.title(f"Histogram of DNN-outputnode $HH$ for dy,tt and hh simulatioins - {i}-cat_id")
-    plt.savefig(f"plots/hist_hhnode_stacked-tt/channel_unterteilung/{i}-cat_id.png", dpi=300, bbox_inches='tight')
+    plt.title(f"Histogram of DNN-outputnode $HH$ for dy,tt and hh simulatioins -{IDs[i]}- cat_id:{id}")
+    plt.savefig(f"plots/hist_hhnode_stacked-tt/channel_unterteilung/{id}-cat_id.png", dpi=300, bbox_inches='tight')
     plt.figure()
 
     #histogramme für nächste iteration clearen
     dy.reset()
     hh.reset()
 
-
-#to do: masken benenne(übersichtlicher), generell sachen benennen, neue python files anlegen (nicht alles in der gleichen), hists für category_ids statt channels machen (siehe mattermost)
+    #noch name im titel anzeigen lassen
