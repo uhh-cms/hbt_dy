@@ -19,3 +19,6 @@ source ~/.bash_profile
 
 packete installieren über sandboxes/*txt
 cf_sandbox sandboxname
+
+zur gpu zum trainieren:
+ssh naf-cms-gpu01.desy.de

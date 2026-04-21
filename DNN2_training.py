@@ -7,7 +7,12 @@ from torch.utils.data import DataLoader, TensorDataset
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 import os
+from sklearn.metrics import roc_curve, auc
+from sklearn.preprocessing import label_binarize
+import torch.nn.functional as F
 
+dict_info={}
+#to do: features und andere Daten in das Dictionary einfügen
 # ==========================================
 # 1. Daten laden
 # ==========================================
@@ -24,6 +29,8 @@ features = [
     'll_pt', 'll_eta', 'll_phi', 'll_mass',
     'met_pt', 'met_phi'
 ]
+dict_info["features"]=features
+dict_info["input_dim"]=len(features)
 
 # ==========================================
 # 2. Datenvorbereitung (Awkward -> NumPy)
@@ -46,9 +53,9 @@ X_hh, y_hh = extract_features(events_hh, 2)
 X = np.vstack([X_dy, X_tt, X_hh])           # np.shape(X):(3453729,10)
 y = np.concatenate([y_dy, y_tt, y_hh])      # np.shape(y): (3453729,)
 
-total_events = 10000 # len(X)
-X = X[:total_events]
-y = y[:total_events]
+#total_events = 100000 # len(X)         evtl falsch, da die daten noch nicht durchmischt wurden
+#X = X[:total_events]
+#y = y[:total_events]
 
 # Train-Test-Split (80% Training, 20% Validierung)
 X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
@@ -73,6 +80,7 @@ y_val_t = torch.tensor(y_val, dtype=torch.long)
 batch_size = 512
 train_loader = DataLoader(TensorDataset(X_train_t, y_train_t), batch_size=batch_size, shuffle=True)
 val_loader = DataLoader(TensorDataset(X_val_t, y_val_t), batch_size=batch_size, shuffle=False)
+dict_info["val_loader"] = val_loader
 
 # ==========================================
 # 4. Definition des Neuronalen Netzes
@@ -106,10 +114,12 @@ class MultiClassNN(nn.Module):
 # Modell initialisieren
 input_dim = len(features)
 num_classes = 3 # DY, TT, HH
+dict_info["num_classes"]=num_classes
 model = MultiClassNN(input_dim, num_classes)
 
 # Falls eine GPU vorhanden ist, nutze sie
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+dict_info["device"]=device
 model.to(device)
 print(f"Trainiere auf Gerät: {device}")
 
@@ -123,11 +133,15 @@ optimizer = optim.Adam(model.parameters(), lr=0.001)
 # ==========================================
 # 6. Trainings-Schleife
 # ==========================================
-epochs = 10 #20
+epochs = 8 #20
+dict_info["epochs"]=epochs
+
+train_loss_list=[]   
+val_loss_list=[]  #liste für loss definieren
+train_auc_history = []
+val_auc_history = []
 
 print("Starte Training...")
-train_loss_list=[]   
-val_loss_list=[]  #array für loss definieren
 
 
 for epoch in range(epochs):
@@ -186,14 +200,15 @@ for epoch in range(epochs):
           f"Val Loss: {val_loss:.4f}, Val Acc: {val_acc:.4f}")
 
 
-import matplotlib.pyplot as plt
-plt.plot(np.arange(epochs),val_loss_list,label="val_loss")
-plt.plot(np.arange(epochs),train_loss_list,label="train_loss")
-plt.savefig("loss_epochs.png")
+#listen zum dict hinzufügen
+dict_info["train_loss_list"] = train_loss_list
+dict_info["val_loss_list"] = val_loss_list
+dict_info["train_auc_history"] = train_auc_history
+dict_info["val_auc_history"] = val_auc_history
+
 
 
 # Optional: Speichern des trainierten Modells
-torch.save(model.state_dict(), "hh2bbtautau_multiclass_model.pth")
-
-#Debugger:
-from IPython import embed; embed(header="MESSAGE Line 184 | File: DNN2_training.py")
+torch.save(model.state_dict(), "hh2bbtautau_multiclass_model.pth") # heißt: save the state_dictionary of the model under this pathwe
+#Ansatz: weiteres Dictionary saven, in dem weitere Informationen sind
+torch.save(dict_info, "model_info.pth")
