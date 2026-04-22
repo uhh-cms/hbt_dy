@@ -53,12 +53,11 @@ X_hh, y_hh = extract_features(events_hh, 2)
 X = np.vstack([X_dy, X_tt, X_hh])           # np.shape(X):(3453729,10)
 y = np.concatenate([y_dy, y_tt, y_hh])      # np.shape(y): (3453729,)
 
-#total_events = 100000 # len(X)         evtl falsch, da die daten noch nicht durchmischt wurden
-#X = X[:total_events]
-#y = y[:total_events]
 
-# Train-Test-Split (80% Training, 20% Validierung)
-X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
+# Train-Test-Split (70% Training, 15% Validierung, 15% Test)
+X_train, X_temp, y_train, y_temp = train_test_split(X, y, test_size=0.3, random_state=42, stratify=y)
+X_val, X_test, y_val, y_test = train_test_split(X_temp, y_temp, test_size=0.5, random_state=42, stratify=y_temp)
+
 
 # Skalierung (Standardisierung) der Input-Variablen - sehr wichtig für Neuronale Netze!
 scaler = StandardScaler()
@@ -75,12 +74,20 @@ X_train_t = torch.tensor(X_train, dtype=torch.float32)
 y_train_t = torch.tensor(y_train, dtype=torch.long)
 X_val_t = torch.tensor(X_val, dtype=torch.float32)
 y_val_t = torch.tensor(y_val, dtype=torch.long)
+X_test_t = torch.tensor(X_test, dtype=torch.float32)
+y_test_t = torch.tensor(y_test, dtype=torch.long)
 
+#kürzere Trainingszeit:
+#==========================
+len_events = 10000 #len(X_train)
+#==========================
 
 batch_size = 512
-train_loader = DataLoader(TensorDataset(X_train_t, y_train_t), batch_size=batch_size, shuffle=True)
+train_loader = DataLoader(TensorDataset(X_train_t[:len_events], y_train_t[:len_events]), batch_size=batch_size, shuffle=True)
 val_loader = DataLoader(TensorDataset(X_val_t, y_val_t), batch_size=batch_size, shuffle=False)
+test_loader = DataLoader(TensorDataset(X_test_t, y_test_t), batch_size=batch_size, shuffle=False)
 dict_info["val_loader"] = val_loader
+dict_info["test_loader"] = test_loader
 
 # ==========================================
 # 4. Definition des Neuronalen Netzes
@@ -133,7 +140,7 @@ optimizer = optim.Adam(model.parameters(), lr=0.001)
 # ==========================================
 # 6. Trainings-Schleife
 # ==========================================
-epochs = 8 #20
+epochs = 2 #20
 dict_info["epochs"]=epochs
 
 train_loss_list=[]   

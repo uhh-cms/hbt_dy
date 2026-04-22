@@ -22,3 +22,5 @@ cf_sandbox sandboxname
 
 zur gpu zum trainieren:
 ssh naf-cms-gpu01.desy.de
+um auf der 11 zu trainieren:
+ssh naf-cms11.desy.de
