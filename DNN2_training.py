@@ -23,14 +23,14 @@ events_dy = ak.from_parquet(f"{parquet_directory}/dy_22pre_v14.parquet")
 events_tt = ak.from_parquet(f"{parquet_directory}/tt_22pre_v14.parquet")
 events_hh = ak.from_parquet(f"{parquet_directory}/hh_22pre_v14.parquet")
 
-# Zu verwendende Variablen
+# Zu verwendende Variablen, die ersten 10 werden fürs Training verwendet
 features = [
     'bb_pt', 'bb_eta', 'bb_phi', 'bb_mass',
     'll_pt', 'll_eta', 'll_phi', 'll_mass',
-    'met_pt', 'met_phi'
+    'met_pt', 'met_phi', 
+    'channel_id', 'event_weight' #evtl hier noch mehr Infos hinzufügen   ('gen_dy_tau_decayproducts', 'gen_ll_pdgid')
 ]
 dict_info["features"]=features
-dict_info["input_dim"]=len(features)
 
 # ==========================================
 # 2. Datenvorbereitung (Awkward -> NumPy)
@@ -50,13 +50,22 @@ X_tt, y_tt = extract_features(events_tt, 1)
 X_hh, y_hh = extract_features(events_hh, 2)
 
 # Kombiniere alle Datensätze
-X = np.vstack([X_dy, X_tt, X_hh])           # np.shape(X):(3453729,10)
+X = np.vstack([X_dy, X_tt, X_hh])           # np.shape(X):(3453729,10+2)
 y = np.concatenate([y_dy, y_tt, y_hh])      # np.shape(y): (3453729,)
 
 
 # Train-Test-Split (70% Training, 15% Validierung, 15% Test)
 X_train, X_temp, y_train, y_temp = train_test_split(X, y, test_size=0.3, random_state=42, stratify=y)
 X_val, X_test, y_val, y_test = train_test_split(X_temp, y_temp, test_size=0.5, random_state=42, stratify=y_temp)
+
+#Trainingsdaten von weiteren Infos trennen
+X_train = X_train[:,:10]
+X_val_info = X_val[:,-2:]
+X_val = X_val[:,:10]
+X_test_info = X_test[:,-2:]
+X_test = X_test[:,:10]
+
+dict_info["X_test_info"] = X_test_info
 
 
 # Skalierung (Standardisierung) der Input-Variablen - sehr wichtig für Neuronale Netze!
@@ -79,11 +88,11 @@ y_test_t = torch.tensor(y_test, dtype=torch.long)
 
 #kürzere Trainingszeit:
 #==========================
-len_events = 10000 #len(X_train)
+nr_events = len(X_train)
 #==========================
 
 batch_size = 512
-train_loader = DataLoader(TensorDataset(X_train_t[:len_events], y_train_t[:len_events]), batch_size=batch_size, shuffle=True)
+train_loader = DataLoader(TensorDataset(X_train_t[:nr_events], y_train_t[:nr_events]), batch_size=batch_size, shuffle=True)
 val_loader = DataLoader(TensorDataset(X_val_t, y_val_t), batch_size=batch_size, shuffle=False)
 test_loader = DataLoader(TensorDataset(X_test_t, y_test_t), batch_size=batch_size, shuffle=False)
 dict_info["val_loader"] = val_loader
@@ -119,7 +128,8 @@ class MultiClassNN(nn.Module):
         return self.network(x)
 
 # Modell initialisieren
-input_dim = len(features)
+input_dim = 10 ############### Achtung! adaptiert nicht automatisch
+dict_info["input_dim"]= input_dim
 num_classes = 3 # DY, TT, HH
 dict_info["num_classes"]=num_classes
 model = MultiClassNN(input_dim, num_classes)
@@ -140,7 +150,7 @@ optimizer = optim.Adam(model.parameters(), lr=0.001)
 # ==========================================
 # 6. Trainings-Schleife
 # ==========================================
-epochs = 2 #20
+epochs = 20
 dict_info["epochs"]=epochs
 
 train_loss_list=[]   

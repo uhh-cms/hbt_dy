@@ -1,7 +1,7 @@
 #to do: die 2 dictionarys zusammenfügen
 #evtl auf die naf mit grafikkarte wechseln
 
-#import awkward as ak
+import awkward as ak
 import numpy as np
 import torch
 import torch.nn as nn
@@ -9,7 +9,7 @@ import torch.nn as nn
 from torch.utils.data import DataLoader, TensorDataset
 #from sklearn.model_selection import train_test_split
 #from sklearn.preprocessing import StandardScaler
-#import os
+import os
 from sklearn.metrics import roc_curve, auc
 from sklearn.preprocessing import label_binarize
 import torch.nn.functional as F
@@ -30,6 +30,7 @@ train_loss_list = dict_info["train_loss_list"]
 val_loader=dict_info["val_loader"]
 device= dict_info["device"]
 test_loader = dict_info["test_loader"] #Daten aus dem Testset
+X_test_info = dict_info["X_test_info"]
 
 #Networkclass definieren
 class MultiClassNN(nn.Module):
@@ -86,7 +87,6 @@ with torch.no_grad():
         # Tensoren vom VRAM in den normalen RAM (CPU) verschieben und in NumPy konvertieren
         all_preds.append(probs.cpu().numpy())
         all_labels.append(batch_y.cpu().numpy())
-    print(probs)
 
 # Listen zu vollständigen NumPy-Arrays zusammenfügen
 all_preds = np.vstack(all_preds)
@@ -148,15 +148,12 @@ import awkward as ak
 import hist
 from hist import Hist
 
-events_dy = ak.from_parquet("/data/dust/user/wolfmor/hh2bbtautau/vincent/dy_22pre_v14.parquet")  # dy simulation data
-events_tt = ak.from_parquet("/data/dust/user/wolfmor/hh2bbtautau/vincent/tt_22pre_v14.parquet")  # tt simulation data
-events_hh = ak.from_parquet("/data/dust/user/wolfmor/hh2bbtautau/vincent/hh_22pre_v14.parquet")  # hh simulation data
+# events_dy = ak.from_parquet("/data/dust/user/wolfmor/hh2bbtautau/vincent/dy_22pre_v14.parquet")  # dy simulation data
+# events_tt = ak.from_parquet("/data/dust/user/wolfmor/hh2bbtautau/vincent/tt_22pre_v14.parquet")  # tt simulation data
+# events_hh = ak.from_parquet("/data/dust/user/wolfmor/hh2bbtautau/vincent/hh_22pre_v14.parquet")  # hh simulation data
 
-#Histogramme definieren, 2-D für dy wegen Unterteilung
-dy = Hist(
-    hist.axis.StrCategory([], name="Zerfallskanal", growth=True),  #diese Achse wird später gestacked
-    hist.axis.Regular(bins=100, start=0, stop=1, name="x")
-)
+#Histogramme definieren
+dy = Hist(hist.axis.Regular(bins=100, start=0, stop=1, name="x"))
 tt = Hist(hist.axis.Regular(bins=100, start=0, stop=1, name="x"))
 hh = Hist(hist.axis.Regular(bins=100, start=0, stop=1, name="x"))
 
@@ -167,26 +164,38 @@ channelname_r=[r"$\tau_e\tau_h$",r"$\tau_\mu\tau_h$",r"$\tau_h\tau_h$"]
 
 #1. Histogramme nach channel aufteilen, fillen (für dy nach Zerfallskanal aufteilen + stacken), plotten.
 for i in [1,2,3]:
-    dy.fill(x=events_dy.run3_dnn_moe_hh[(events_dy.channel_id == i) & (events_dy.gen_ll_pdgid == 11)],Zerfallskanal=r"gen: DY $\to e^+e^-$", weight=events_dy.event_weight[(events_dy.channel_id == i) & (events_dy.gen_ll_pdgid == 11)])    #maske für channel (und bei dy Zerfallskanal) in eckigen Klammern
-    dy.fill(x=events_dy.run3_dnn_moe_hh[(events_dy.channel_id == i) & (events_dy.gen_ll_pdgid == 13)],Zerfallskanal=r"gen: DY $\to \mu^+\mu^-$", weight=events_dy.event_weight[(events_dy.channel_id == i) & (events_dy.gen_ll_pdgid == 13)])
-    dy.fill(x=events_dy.run3_dnn_moe_hh[(events_dy.channel_id == i) & (events_dy.gen_ll_pdgid == 15)],Zerfallskanal=r"gen: DY $\to \tau^+\tau^-$", weight=events_dy.event_weight[(events_dy.channel_id == i) & (events_dy.gen_ll_pdgid == 15)])
+    channel_id_mask = (X_test_info[:,0] == i) #Maske definieren
+    hh_node = all_preds[:, 0]
+    dy_pred = hh_node[(all_labels == 0) & (channel_id_mask)]
+    tt_pred = hh_node[(all_labels == 1) & (channel_id_mask)]
+    hh_pred = hh_node[(all_labels == 2) & (channel_id_mask)]
 
-    tt.fill(events_tt.run3_dnn_moe_hh[events_tt.channel_id == i],weight=events_tt.event_weight[events_tt.channel_id == i])
-    hh.fill(events_hh.run3_dnn_moe_hh[events_hh.channel_id == i],weight=events_hh.event_weight[events_hh.channel_id == i])
+    event_weight = X_test_info[:,1]
+
+    dy_event_weight = event_weight[(all_labels == 0) & (channel_id_mask)]
+    tt_event_weight = event_weight[(all_labels == 1) & (channel_id_mask)]
+    hh_event_weight = event_weight[(all_labels == 2) & (channel_id_mask)]
+
+    from IPython import embed; embed(header="MESSAGE Line 181 | File: DNN3_plotting.py")
+    dy.fill(x=dy_pred, weight=dy_event_weight)
+    tt.fill(x=tt_pred, weight=tt_event_weight)
+    hh.fill(x=hh_pred, weight=hh_event_weight)
+
+    # dy.fill(x=dy_pred[channel_id_mask], weight=dy_event_weight[channel_id_mask])
+    # tt.fill(x=tt_pred[channel_id_mask], weight=tt_event_weight[channel_id_mask])
+    # hh.fill(x=hh_pred[channel_id_mask], weight=hh_event_weight[channel_id_mask])
+
 
     plt.yscale('log')    #Achse logarithmisch skalieren 
 
-    # Stack-Plot erstellen
-    stack = dy.stack("Zerfallskanal")
-    stack.plot(stack=True, histtype="fill") # 'stack=True' ist entscheidend!
-
+    dy.plot(label=r"$DY$")
     tt.plot(label=r"$t\bar{t}$")
     hh.plot(label=r"$HH$")
 
     plt.legend()
     plt.ylabel("number of events (weighted)")
     plt.xlabel("Di-Higgs-outputnode of the DNN")
-    plt.title(f"Histogram of DNN-outputnode $HH$ for dy,tt and hh simulatioins - {channelname_r[i-1]}-channel")
+    plt.title(f"Histogram of won DNN (outputnode $HH$) for dy,tt and hh simulatioins - {channelname_r[i-1]}-channel")
     plt.savefig(f"plots_mynetwork/hist_hhnode/{channelname[i-1]}-channel.png", dpi=300, bbox_inches='tight')
     plt.figure()
 
@@ -194,3 +203,6 @@ for i in [1,2,3]:
     dy.reset()
     tt.reset()
     hh.reset()
+
+    #To do: das aktuelle Training in einer parquet file speichern, die zusätzlich zum eigentlichen Netzwerk noch die Ergebnisse meines Netzwerkes speichert. (außerdem die bisherigen bemühungen
+    #zum unscrambeln wieder löschen. Eine letzte idee: eventuell kann man vor dem scrambeln die daten aufteilen)
