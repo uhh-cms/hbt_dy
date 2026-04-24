@@ -15,6 +15,7 @@ dy = Hist(
 )
 tt = Hist(hist.axis.Regular(bins=100, start=0, stop=1, name="x"))
 hh = Hist(hist.axis.Regular(bins=100, start=0, stop=1, name="x"))
+s = Hist(hist.axis.Regular(bins=100, start=0, stop=1, name="x"))
 
 #Namen der decay channel definieren:
 channelname=["e-tau", "mu-tau", "tau-tau"]
@@ -29,6 +30,17 @@ for i in [1,2,3]:
 
     tt.fill(events_tt.run3_dnn_moe_hh[events_tt.channel_id == i],weight=events_tt.event_weight[events_tt.channel_id == i])
     hh.fill(events_hh.run3_dnn_moe_hh[events_hh.channel_id == i],weight=events_hh.event_weight[events_hh.channel_id == i])
+
+    #from IPython import embed; embed(header="MESSAGE Line 34 | File: hists_1.py")
+    fig, ax1 = plt.subplots()
+    background_bins = np.sum(dy.values(),axis=0)+ tt.values()
+    signal_bins = hh.values()
+    significance = signal_bins**2/background_bins
+    ax2 = ax1.twinx()  # Erstellt die rechte Achse
+    ax2.plot(np.linspace(0, 1, 100),significance, label="significance")
+    ax2.set_ylabel('Exponentielle Werte')
+    ax2.tick_params(axis='y', labelcolor='b')
+    #plt.plot(significance)
 
     plt.yscale('log')    #Achse logarithmisch skalieren 
 
