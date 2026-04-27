@@ -96,8 +96,6 @@ for i in [1,2,3]: #i steht für den channel
     ax1.set_ylabel("number of events (weighted)")
     plt.yscale('log')    #linke Achse logarithmisch skalieren 
 
-    from IPython import embed; embed(header="MESSAGE Line 99 | File: hists_1.py")
-
     #zweite Achse
     background_bins = np.sum(dy.values(),axis=0)
     signal_bins = hh.values()
@@ -116,9 +114,6 @@ for i in [1,2,3]: #i steht für den channel
     # Gemeinsam plotten
     ax1.legend(h1 + h2, l1 + l2, loc="upper center", ncol=2, frameon=True)
 
-
-
-    plt.legend()
     plt.xlabel("Di-Higgs-outputnode of the DNN")
     plt.title(f"Histogram of DNN-outputnode $HH$ for dy,tt and hh simulatioins - {channelname_r[i-1]}-channel")
     plt.savefig(f"plots/hist_hhnode_stacked-tt/{channelname[i-1]}-channel.png", dpi=300, bbox_inches='tight')
