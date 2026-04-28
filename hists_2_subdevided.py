@@ -94,7 +94,7 @@ for i in [1,2,3]: #i steht für den channel
     background_bins = np.sum(dy.values(),axis=0)
     signal_bins = hh.values()
     significance = signal_bins**2/background_bins
-    significance_total = round(np.sum(significance),3)
+    significance_total = round(np.sqrt(np.sum(significance**2)),3)
     ax2 = ax1.twinx()  # Erstellt die rechte Achse
     ax2.step(np.linspace(0, 1, 100),significance, label=f"significance (total = {significance_total})", color="black")
     ax2.set_ylabel('Significance')
@@ -150,7 +150,7 @@ for i,id in enumerate([147,151,175,179,203,207],start=0): #id steht für categor
     background_bins = np.sum(dy.values(),axis=0)
     signal_bins = hh.values()
     significance = signal_bins**2/background_bins
-    significance_total = round(np.sum(significance),3)
+    significance_total = round(np.sqrt(np.sum(significance**2)),3)
     ax2 = ax1.twinx()  # Erstellt die rechte Achse
     ax2.step(np.linspace(0, 1, 100),significance, label=f"significance (total = {significance_total})", color="black")
     ax2.set_ylabel('Significance')

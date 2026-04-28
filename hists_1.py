@@ -48,7 +48,7 @@ for i in [1,2,3]:
     background_bins = np.sum(dy.values(),axis=0)+ tt.values()
     signal_bins = hh.values()
     significance = signal_bins**2/background_bins
-    significance_total = round(np.sum(significance),3)
+    significance_total = round(np.sqrt(np.sum(significance**2)),3)
     ax2 = ax1.twinx()  # Erstellt die rechte Achse
     ax2.step(np.linspace(0, 1, 100),significance, label=f"significance (total = {significance_total})", color="black")
     ax2.set_ylabel('Significance')
@@ -76,7 +76,7 @@ for i in [1,2,3]:
 
 
 
-#3. wie 1, aber tt wird zum stack hinzugefügt
+#2. wie 1, aber tt wird zum stack hinzugefügt
 for i in [1,2,3]: #i steht für den channel
     dy.fill(x=events_dy.run3_dnn_moe_hh[(events_dy.channel_id == i) & (events_dy.gen_ll_pdgid == 11)],Zerfallskanal=r"gen: DY $\to e^+e^-$", weight=events_dy.event_weight[(events_dy.channel_id == i) & (events_dy.gen_ll_pdgid == 11)])    #maske für channel (und bei dy Zerfallskanal) in eckigen Klammern
     dy.fill(x=events_dy.run3_dnn_moe_hh[(events_dy.channel_id == i) & (events_dy.gen_ll_pdgid == 13)],Zerfallskanal=r"gen: DY $\to \mu^+\mu^-$", weight=events_dy.event_weight[(events_dy.channel_id == i) & (events_dy.gen_ll_pdgid == 13)])
@@ -100,7 +100,7 @@ for i in [1,2,3]: #i steht für den channel
     background_bins = np.sum(dy.values(),axis=0)
     signal_bins = hh.values()
     significance = signal_bins**2/background_bins
-    significance_total = round(np.sum(significance),3)
+    significance_total = round(np.sqrt(np.sum(significance**2)),3)
     ax2 = ax1.twinx()  # Erstellt die rechte Achse
     ax2.step(np.linspace(0, 1, 100),significance, label=f"significance (total = {significance_total})", color="black")
     ax2.set_ylabel('Significance')
