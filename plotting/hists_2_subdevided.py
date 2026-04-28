@@ -122,6 +122,7 @@ for i in [1,2,3]: #i steht für den channel
 #7.2 hists für category_ids statt channels
 #masken erstellen
 IDs=["etau__res1b__os__iso","etau__res2b__os__iso","mutau__res1b__os__iso","mutau__res2b__os__iso","tautau__res1b__os__iso","tautau__res2b__os__iso"]
+#Neudefinition von dy wichtig um histogrammachsen neu zu definieren (anscheinend werden sie bei dy.reset gespeichert)
 dy = Hist(
     hist.axis.StrCategory([], name="Zerfallskanal", growth=True),  #diese Achse wird später gestacked
     hist.axis.Regular(bins=100, start=0, stop=1, name="x")

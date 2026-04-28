@@ -109,7 +109,6 @@ for i in [1,2,3]: #i steht für den channel
     significance = signal_bins**2/background_bins
     significance = np.nan_to_num(significance, nan=0.0)
     significance_total = round(np.sqrt(np.sum(significance**2)),3)
-    #from IPython import embed; embed(header="MESSAGE Line 111 | File: hists_1_logit.py")
     ax2 = ax1.twinx()  # Erstellt die rechte Achse
     ax2.step(np.linspace(-14+19/100, 5, 100),significance, label=f"significance (total = {significance_total})", color="black")
     ax2.set_ylabel('Significance')

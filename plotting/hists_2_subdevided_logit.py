@@ -8,13 +8,20 @@ events_dy = ak.from_parquet("/data/dust/user/wolfmor/hh2bbtautau/vincent/dy_22pr
 events_tt = ak.from_parquet("/data/dust/user/wolfmor/hh2bbtautau/vincent/tt_22pre_v14.parquet")  # tt simulation data
 events_hh = ak.from_parquet("/data/dust/user/wolfmor/hh2bbtautau/vincent/hh_22pre_v14.parquet")  # hh simulation data
 
+#logit funktion definieren
+def stable_logit(x, eps=1e-6, limit=5.0):
+    x = np.clip(x, eps, 1 - eps) # Begrenzt x auf [0.000001, 0.999999]
+    y = np.log(x / (1 - x))
+    return np.clip(y,-14, limit-1e-5)
+
 #Histogramme definieren, 2-D für dy wegen Unterteilung
 dy = Hist(
     hist.axis.StrCategory([], name="Zerfallskanal", growth=True),  #diese Achse wird später gestacked
-    hist.axis.Regular(bins=100, start=0, stop=1, name="x")
+    hist.axis.Regular(bins=100, start=-14, stop=5, name="x")
 )
-tt = Hist(hist.axis.Regular(bins=100, start=0, stop=1, name="x"))
-hh = Hist(hist.axis.Regular(bins=100, start=0, stop=1, name="x"))
+
+tt = Hist(hist.axis.Regular(bins=100, start=-14, stop=5, name="x"))
+hh = Hist(hist.axis.Regular(bins=100, start=-14, stop=5, name="x"))
 
 #Namen der decay channel definieren:
 channelname=["e-tau", "mu-tau", "tau-tau"]
@@ -63,21 +70,21 @@ mu_pdgid_mask  = events_dy.gen_ll_pdgid == 13
 tau_pdgid_mask = events_dy.gen_ll_pdgid == 15
 
 for i in [1,2,3]: #i steht für den channel
-    dy.fill(x=events_dy.run3_dnn_moe_hh[(events_dy.channel_id == i) & (el_pdgid_mask)],Zerfallskanal=r"$e^+e^-$", weight=events_dy.event_weight[(events_dy.channel_id == i) & (el_pdgid_mask)])    #maske für channel (und bei dy Zerfallskanal) in eckigen Klammern
-    dy.fill(x=events_dy.run3_dnn_moe_hh[(events_dy.channel_id == i) & (mu_pdgid_mask)],Zerfallskanal=r"$\mu^+\mu^-$", weight=events_dy.event_weight[(events_dy.channel_id == i) & (mu_pdgid_mask)])
+    dy.fill(x=stable_logit(events_dy.run3_dnn_moe_hh[(events_dy.channel_id == i) & (el_pdgid_mask)]),Zerfallskanal=r"$e^+e^-$", weight=events_dy.event_weight[(events_dy.channel_id == i) & (el_pdgid_mask)])    #maske für channel (und bei dy Zerfallskanal) in eckigen Klammern
+    dy.fill(x=stable_logit(events_dy.run3_dnn_moe_hh[(events_dy.channel_id == i) & (mu_pdgid_mask)]),Zerfallskanal=r"$\mu^+\mu^-$", weight=events_dy.event_weight[(events_dy.channel_id == i) & (mu_pdgid_mask)])
 
 
-    dy.fill(x=events_dy.run3_dnn_moe_hh[(tau_pdgid_mask)][(events_dy.channel_id[tau_pdgid_mask] == i) & (tau_zerfallskanäle[0]==2) & (tau_zerfallskanäle[1]==0) & (tau_zerfallskanäle[2]==0)],Zerfallskanal=r"$\tau_e\tau_e$", weight=events_dy.event_weight[(tau_pdgid_mask)][(events_dy.channel_id[tau_pdgid_mask] == i) & (tau_zerfallskanäle[0]==2) & (tau_zerfallskanäle[1]==0) & (tau_zerfallskanäle[2]==0)])
-    dy.fill(x=events_dy.run3_dnn_moe_hh[(tau_pdgid_mask)][(events_dy.channel_id[tau_pdgid_mask] == i) & (tau_zerfallskanäle[0]==0) & (tau_zerfallskanäle[1]==2) & (tau_zerfallskanäle[2]==0)],Zerfallskanal=r"$\tau_\mu\tau_\mu$", weight=events_dy.event_weight[(tau_pdgid_mask)][(events_dy.channel_id[tau_pdgid_mask] == i) & (tau_zerfallskanäle[0]==0) & (tau_zerfallskanäle[1]==2) & (tau_zerfallskanäle[2]==0)])
-    dy.fill(x=events_dy.run3_dnn_moe_hh[(tau_pdgid_mask)][(events_dy.channel_id[tau_pdgid_mask] == i) & (tau_zerfallskanäle[0]==0) & (tau_zerfallskanäle[1]==0) & (tau_zerfallskanäle[2]==2)],Zerfallskanal=r"$\tau_h\tau_h$", weight=events_dy.event_weight[(tau_pdgid_mask)][(events_dy.channel_id[tau_pdgid_mask] == i) & (tau_zerfallskanäle[0]==0) & (tau_zerfallskanäle[1]==0) & (tau_zerfallskanäle[2]==2)])
-    dy.fill(x=events_dy.run3_dnn_moe_hh[(tau_pdgid_mask)][(events_dy.channel_id[tau_pdgid_mask] == i) & (tau_zerfallskanäle[0]==1) & (tau_zerfallskanäle[1]==1) & (tau_zerfallskanäle[2]==0)],Zerfallskanal=r"$\tau_e\tau_\mu$", weight=events_dy.event_weight[(tau_pdgid_mask)][(events_dy.channel_id[tau_pdgid_mask] == i) & (tau_zerfallskanäle[0]==1) & (tau_zerfallskanäle[1]==1) & (tau_zerfallskanäle[2]==0)])
-    dy.fill(x=events_dy.run3_dnn_moe_hh[(tau_pdgid_mask)][(events_dy.channel_id[tau_pdgid_mask] == i) & (tau_zerfallskanäle[0]==1) & (tau_zerfallskanäle[1]==0) & (tau_zerfallskanäle[2]==1)],Zerfallskanal=r"$\tau_e\tau_h$", weight=events_dy.event_weight[(tau_pdgid_mask)][(events_dy.channel_id[tau_pdgid_mask] == i) & (tau_zerfallskanäle[0]==1) & (tau_zerfallskanäle[1]==0) & (tau_zerfallskanäle[2]==1)])
-    dy.fill(x=events_dy.run3_dnn_moe_hh[(tau_pdgid_mask)][(events_dy.channel_id[tau_pdgid_mask] == i) & (tau_zerfallskanäle[0]==0) & (tau_zerfallskanäle[1]==1) & (tau_zerfallskanäle[2]==1)],Zerfallskanal=r"$\tau_\mu\tau_h$", weight=events_dy.event_weight[(tau_pdgid_mask)][(events_dy.channel_id[tau_pdgid_mask] == i) & (tau_zerfallskanäle[0]==0) & (tau_zerfallskanäle[1]==1) & (tau_zerfallskanäle[2]==1)])
+    dy.fill(x=stable_logit(events_dy.run3_dnn_moe_hh[(tau_pdgid_mask)][(events_dy.channel_id[tau_pdgid_mask] == i) & (tau_zerfallskanäle[0]==2) & (tau_zerfallskanäle[1]==0) & (tau_zerfallskanäle[2]==0)]),Zerfallskanal=r"$\tau_e\tau_e$", weight=events_dy.event_weight[(tau_pdgid_mask)][(events_dy.channel_id[tau_pdgid_mask] == i) & (tau_zerfallskanäle[0]==2) & (tau_zerfallskanäle[1]==0) & (tau_zerfallskanäle[2]==0)])
+    dy.fill(x=stable_logit(events_dy.run3_dnn_moe_hh[(tau_pdgid_mask)][(events_dy.channel_id[tau_pdgid_mask] == i) & (tau_zerfallskanäle[0]==0) & (tau_zerfallskanäle[1]==2) & (tau_zerfallskanäle[2]==0)]),Zerfallskanal=r"$\tau_\mu\tau_\mu$", weight=events_dy.event_weight[(tau_pdgid_mask)][(events_dy.channel_id[tau_pdgid_mask] == i) & (tau_zerfallskanäle[0]==0) & (tau_zerfallskanäle[1]==2) & (tau_zerfallskanäle[2]==0)])
+    dy.fill(x=stable_logit(events_dy.run3_dnn_moe_hh[(tau_pdgid_mask)][(events_dy.channel_id[tau_pdgid_mask] == i) & (tau_zerfallskanäle[0]==0) & (tau_zerfallskanäle[1]==0) & (tau_zerfallskanäle[2]==2)]),Zerfallskanal=r"$\tau_h\tau_h$", weight=events_dy.event_weight[(tau_pdgid_mask)][(events_dy.channel_id[tau_pdgid_mask] == i) & (tau_zerfallskanäle[0]==0) & (tau_zerfallskanäle[1]==0) & (tau_zerfallskanäle[2]==2)])
+    dy.fill(x=stable_logit(events_dy.run3_dnn_moe_hh[(tau_pdgid_mask)][(events_dy.channel_id[tau_pdgid_mask] == i) & (tau_zerfallskanäle[0]==1) & (tau_zerfallskanäle[1]==1) & (tau_zerfallskanäle[2]==0)]),Zerfallskanal=r"$\tau_e\tau_\mu$", weight=events_dy.event_weight[(tau_pdgid_mask)][(events_dy.channel_id[tau_pdgid_mask] == i) & (tau_zerfallskanäle[0]==1) & (tau_zerfallskanäle[1]==1) & (tau_zerfallskanäle[2]==0)])
+    dy.fill(x=stable_logit(events_dy.run3_dnn_moe_hh[(tau_pdgid_mask)][(events_dy.channel_id[tau_pdgid_mask] == i) & (tau_zerfallskanäle[0]==1) & (tau_zerfallskanäle[1]==0) & (tau_zerfallskanäle[2]==1)]),Zerfallskanal=r"$\tau_e\tau_h$", weight=events_dy.event_weight[(tau_pdgid_mask)][(events_dy.channel_id[tau_pdgid_mask] == i) & (tau_zerfallskanäle[0]==1) & (tau_zerfallskanäle[1]==0) & (tau_zerfallskanäle[2]==1)])
+    dy.fill(x=stable_logit(events_dy.run3_dnn_moe_hh[(tau_pdgid_mask)][(events_dy.channel_id[tau_pdgid_mask] == i) & (tau_zerfallskanäle[0]==0) & (tau_zerfallskanäle[1]==1) & (tau_zerfallskanäle[2]==1)]),Zerfallskanal=r"$\tau_\mu\tau_h$", weight=events_dy.event_weight[(tau_pdgid_mask)][(events_dy.channel_id[tau_pdgid_mask] == i) & (tau_zerfallskanäle[0]==0) & (tau_zerfallskanäle[1]==1) & (tau_zerfallskanäle[2]==1)])
 
 
-    dy.fill(x=events_tt.run3_dnn_moe_hh[events_tt.channel_id == i],Zerfallskanal=r"$t\bar{t}$", weight=events_tt.event_weight[events_tt.channel_id == i])
+    dy.fill(x=stable_logit(events_tt.run3_dnn_moe_hh[events_tt.channel_id == i]),Zerfallskanal=r"$t\bar{t}$", weight=events_tt.event_weight[events_tt.channel_id == i])
 
-    hh.fill(events_hh.run3_dnn_moe_hh[events_hh.channel_id == i],weight=events_hh.event_weight[events_hh.channel_id == i])
+    hh.fill(x=stable_logit(events_hh.run3_dnn_moe_hh[events_hh.channel_id == i]),weight=events_hh.event_weight[events_hh.channel_id == i])
 
     fig, ax1 = plt.subplots()
 
@@ -94,9 +101,10 @@ for i in [1,2,3]: #i steht für den channel
     background_bins = np.sum(dy.values(),axis=0)
     signal_bins = hh.values()
     significance = signal_bins**2/background_bins
+    significance = np.nan_to_num(significance, nan=0.0)
     significance_total = round(np.sqrt(np.sum(significance**2)),3)
     ax2 = ax1.twinx()  # Erstellt die rechte Achse
-    ax2.step(np.linspace(0, 1, 100),significance, label=f"significance (total = {significance_total})", color="black")
+    ax2.step(np.linspace(-14+19/100, 5, 100),significance, label=f"significance (total = {significance_total})", color="black")
     ax2.set_ylabel('Significance')
     ax2.tick_params(axis='y', labelcolor='black')
 
@@ -122,18 +130,20 @@ for i in [1,2,3]: #i steht für den channel
 #7.2 hists für category_ids statt channels
 #masken erstellen
 IDs=["etau__res1b__os__iso","etau__res2b__os__iso","mutau__res1b__os__iso","mutau__res2b__os__iso","tautau__res1b__os__iso","tautau__res2b__os__iso"]
+
+#Neudefinition von dy ist wichtig!
 dy = Hist(
     hist.axis.StrCategory([], name="Zerfallskanal", growth=True),  #diese Achse wird später gestacked
-    hist.axis.Regular(bins=100, start=0, stop=1, name="x")
+    hist.axis.Regular(bins=100, start=-14, stop=5, name="x")
 )
 
 for i,id in enumerate([147,151,175,179,203,207],start=0): #id steht für category ids, i ist index
-    dy.fill(x=events_dy.run3_dnn_moe_hh[ak.any(events_dy.category_ids == id,axis=1) & (events_dy.gen_ll_pdgid == 11)],Zerfallskanal=r"$e^+e^-$", weight=events_dy.event_weight[ak.any(events_dy.category_ids == id,axis=1) & (events_dy.gen_ll_pdgid == 11)])    #maske für channel (und bei dy Zerfallskanal) in eckigen Klammern
-    dy.fill(x=events_dy.run3_dnn_moe_hh[ak.any(events_dy.category_ids == id,axis=1) & (events_dy.gen_ll_pdgid == 13)],Zerfallskanal=r"$\mu^+\mu^-$", weight=events_dy.event_weight[ak.any(events_dy.category_ids == id,axis=1) & (events_dy.gen_ll_pdgid == 13)])
-    dy.fill(x=events_dy.run3_dnn_moe_hh[ak.any(events_dy.category_ids == id,axis=1) & (events_dy.gen_ll_pdgid == 15)],Zerfallskanal=r"$\tau^+\tau^-$", weight=events_dy.event_weight[ak.any(events_dy.category_ids == id,axis=1) & (events_dy.gen_ll_pdgid == 15)])
-    dy.fill(x=events_tt.run3_dnn_moe_hh[ak.any(events_tt.category_ids == id,axis=1)],Zerfallskanal=r"$t\bar{t}$", weight=events_tt.event_weight[ak.any(events_tt.category_ids == id,axis=1)])
+    dy.fill(x=stable_logit(events_dy.run3_dnn_moe_hh[ak.any(events_dy.category_ids == id,axis=1) & (events_dy.gen_ll_pdgid == 11)]),Zerfallskanal=r"$e^+e^-$", weight=events_dy.event_weight[ak.any(events_dy.category_ids == id,axis=1) & (events_dy.gen_ll_pdgid == 11)])    #maske für channel (und bei dy Zerfallskanal) in eckigen Klammern
+    dy.fill(x=stable_logit(events_dy.run3_dnn_moe_hh[ak.any(events_dy.category_ids == id,axis=1) & (events_dy.gen_ll_pdgid == 13)]),Zerfallskanal=r"$\mu^+\mu^-$", weight=events_dy.event_weight[ak.any(events_dy.category_ids == id,axis=1) & (events_dy.gen_ll_pdgid == 13)])
+    dy.fill(x=stable_logit(events_dy.run3_dnn_moe_hh[ak.any(events_dy.category_ids == id,axis=1) & (events_dy.gen_ll_pdgid == 15)]),Zerfallskanal=r"$\tau^+\tau^-$", weight=events_dy.event_weight[ak.any(events_dy.category_ids == id,axis=1) & (events_dy.gen_ll_pdgid == 15)])
+    dy.fill(x=stable_logit(events_tt.run3_dnn_moe_hh[ak.any(events_tt.category_ids == id,axis=1)]),Zerfallskanal=r"$t\bar{t}$", weight=events_tt.event_weight[ak.any(events_tt.category_ids == id,axis=1)])
 
-    hh.fill(events_hh.run3_dnn_moe_hh[ak.any(events_hh.category_ids == id,axis=1)],weight=events_hh.event_weight[ak.any(events_hh.category_ids == id,axis=1)])
+    hh.fill(x=stable_logit(events_hh.run3_dnn_moe_hh[ak.any(events_hh.category_ids == id,axis=1)]),weight=events_hh.event_weight[ak.any(events_hh.category_ids == id,axis=1)])
 
     fig, ax1 = plt.subplots()
 
@@ -150,9 +160,10 @@ for i,id in enumerate([147,151,175,179,203,207],start=0): #id steht für categor
     background_bins = np.sum(dy.values(),axis=0)
     signal_bins = hh.values()
     significance = signal_bins**2/background_bins
+    significance = np.nan_to_num(significance, nan=0.0)
     significance_total = round(np.sqrt(np.sum(significance**2)),3)
     ax2 = ax1.twinx()  # Erstellt die rechte Achse
-    ax2.step(np.linspace(0, 1, 100),significance, label=f"significance (total = {significance_total})", color="black")
+    ax2.step(np.linspace(-14+19/100, 5, 100),significance, label=f"significance (total = {significance_total})", color="black")
     ax2.set_ylabel('Significance')
     ax2.tick_params(axis='y', labelcolor='black')
 
