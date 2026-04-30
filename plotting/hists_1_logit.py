@@ -9,20 +9,32 @@ events_dy = ak.from_parquet("/data/dust/user/wolfmor/hh2bbtautau/vincent/dy_22pr
 events_tt = ak.from_parquet("/data/dust/user/wolfmor/hh2bbtautau/vincent/tt_22pre_v14.parquet")  # tt simulation data
 events_hh = ak.from_parquet("/data/dust/user/wolfmor/hh2bbtautau/vincent/hh_22pre_v14.parquet")  # hh simulation data
 
+# events_hh = events_hh[events_hh.run3_dnn_moe_hh > 0]
+# events_tt = events_tt[events_tt.run3_dnn_moe_hh > 0]
+# events_dy = events_dy[events_dy.run3_dnn_moe_hh > 0]
+
 #logit funktion definieren
 def stable_logit(x, eps=1e-6, limit=5.0):
     x = np.clip(x, eps, 1 - eps) # Begrenzt x auf [0.000001, 0.999999]
     y = np.log(x / (1 - x))
     return np.clip(y,-14, limit-1e-5)
 
+# #alternative logit funktion definieren
+# eps=1e-6
+# def stable_logit(x):
+#     # set this fct to return x for normal scale
+#     y = np.log((x + eps) / (1 - x + eps))
+#     return np.clip(y, -14, 5-eps)
+
+
 #Histogramme definieren, 2-D für dy wegen Unterteilung
 dy = Hist(
     hist.axis.StrCategory([], name="Zerfallskanal", growth=True),  #diese Achse wird später gestacked
-    hist.axis.Regular(bins=100, start=-14, stop=5, name="x")
+    hist.axis.Regular(bins=20, start=-14, stop=5, name="x")
 )
-tt = Hist(hist.axis.Regular(bins=100, start=-14, stop=5, name="x"))
-hh = Hist(hist.axis.Regular(bins=100, start=-14, stop=5, name="x"))
-s = Hist(hist.axis.Regular(bins=100, start=-14, stop=5, name="x"))
+tt = Hist(hist.axis.Regular(bins=20, start=-14, stop=5, name="x"))
+hh = Hist(hist.axis.Regular(bins=20, start=-14, stop=5, name="x"))
+s = Hist(hist.axis.Regular(bins=20, start=-14, stop=5, name="x"))
 
 #Namen der decay channel definieren:
 channelname=["e-tau", "mu-tau", "tau-tau"]
@@ -31,7 +43,7 @@ channelname_r=[r"$\tau_e\tau_h$",r"$\tau_\mu\tau_h$",r"$\tau_h\tau_h$"]
 
 #1. Histogramme nach channel aufteilen, fillen (für dy nach Zerfallskanal aufteilen + stacken), plotten.
 for i in [1,2,3]:
-    dy.fill(x=stable_logit(events_dy.run3_dnn_moe_hh[(events_dy.channel_id == i) & (events_dy.gen_ll_pdgid == 11)]),Zerfallskanal=r"gen: DY $\to e^+e^-$", weight=events_dy.event_weight[(events_dy.channel_id == i) & (events_dy.gen_ll_pdgid == 11)])    #maske für channel (und bei dy Zerfallskanal) in eckigen Klammern
+    dy.fill(x=stable_logit(events_dy.run3_dnn_moe_hh[(events_dy.channel_id == i) & (events_dy.gen_ll_pdgid == 11)]),Zerfallskanal=r"gen: DY $\to e^+e^-$", weight=events_dy.event_weight[(events_dy.channel_id == i) & (events_dy.gen_ll_pdgid == 11)])    #durch die channel id masken wird insgesamt nichts weggeschnitten, (jedes event ist abgedeckt mit einer channel id)
     dy.fill(x=stable_logit(events_dy.run3_dnn_moe_hh[(events_dy.channel_id == i) & (events_dy.gen_ll_pdgid == 13)]),Zerfallskanal=r"gen: DY $\to \mu^+\mu^-$", weight=events_dy.event_weight[(events_dy.channel_id == i) & (events_dy.gen_ll_pdgid == 13)])
     dy.fill(x=stable_logit(events_dy.run3_dnn_moe_hh[(events_dy.channel_id == i) & (events_dy.gen_ll_pdgid == 15)]),Zerfallskanal=r"gen: DY $\to \tau^+\tau^-$", weight=events_dy.event_weight[(events_dy.channel_id == i) & (events_dy.gen_ll_pdgid == 15)])
 
@@ -57,7 +69,7 @@ for i in [1,2,3]:
     significance = signal_bins**2/background_bins
     significance_total = round(np.sqrt(np.sum(significance**2)),3)
     ax2 = ax1.twinx()  # Erstellt die rechte Achse
-    ax2.step(np.linspace(-14+19/100, 5, 100),significance, label=f"significance (total = {significance_total})", color="black")
+    ax2.step(np.linspace(-14+19/20, 5, 20),significance, label=f"significance (total = {significance_total})", color="black")
     ax2.set_ylabel('Significance')
     ax2.tick_params(axis='y', labelcolor='black')
 
@@ -107,10 +119,11 @@ for i in [1,2,3]: #i steht für den channel
     background_bins = np.sum(dy.values(),axis=0)
     signal_bins = hh.values()
     significance = signal_bins**2/background_bins
-    significance = np.nan_to_num(significance, nan=0.0)
+    #significance = np.nan_to_num(significance, nan=0.0)
     significance_total = round(np.sqrt(np.sum(significance**2)),3)
+    from IPython import embed; embed(header="MESSAGE Line 112 | File: hists_1_logit.py")
     ax2 = ax1.twinx()  # Erstellt die rechte Achse
-    ax2.step(np.linspace(-14+19/100, 5, 100),significance, label=f"significance (total = {significance_total})", color="black")
+    ax2.step(np.linspace(-14+19/20, 5, 20),significance, label=f"significance (total = {significance_total})", color="black")
     ax2.set_ylabel('Significance')
     ax2.tick_params(axis='y', labelcolor='black')
 

@@ -9,19 +9,25 @@ events_tt = ak.from_parquet("/data/dust/user/wolfmor/hh2bbtautau/vincent/tt_22pr
 events_hh = ak.from_parquet("/data/dust/user/wolfmor/hh2bbtautau/vincent/hh_22pre_v14.parquet")  # hh simulation data
 
 #logit funktion definieren
-def stable_logit(x, eps=1e-6, limit=5.0):
-    x = np.clip(x, eps, 1 - eps) # Begrenzt x auf [0.000001, 0.999999]
-    y = np.log(x / (1 - x))
-    return np.clip(y,-14, limit-1e-5)
+# def stable_logit(x, eps=1e-6, limit=5.0):
+#     x = np.clip(x, eps, 1 - eps) # Begrenzt x auf [0.000001, 0.999999]
+#     y = np.log(x / (1 - x))
+#     return np.clip(y,-14, limit-1e-5)
+
+#alternative logit funktion definieren
+def logit(x):
+    # set this fct to return x for normal scale
+    y = np.log((x + eps) / (1 - x + eps))
+    return np.clip(y, -14, 5-eps)
 
 #Histogramme definieren, 2-D für dy wegen Unterteilung
 dy = Hist(
     hist.axis.StrCategory([], name="Zerfallskanal", growth=True),  #diese Achse wird später gestacked
-    hist.axis.Regular(bins=100, start=-14, stop=5, name="x")
+    hist.axis.Regular(bins=20, start=-14, stop=5, name="x")
 )
 
-tt = Hist(hist.axis.Regular(bins=100, start=-14, stop=5, name="x"))
-hh = Hist(hist.axis.Regular(bins=100, start=-14, stop=5, name="x"))
+tt = Hist(hist.axis.Regular(bins=20, start=-14, stop=5, name="x"))
+hh = Hist(hist.axis.Regular(bins=20, start=-14, stop=5, name="x"))
 
 #Namen der decay channel definieren:
 channelname=["e-tau", "mu-tau", "tau-tau"]
@@ -101,10 +107,10 @@ for i in [1,2,3]: #i steht für den channel
     background_bins = np.sum(dy.values(),axis=0)
     signal_bins = hh.values()
     significance = signal_bins**2/background_bins
-    significance = np.nan_to_num(significance, nan=0.0)
+    #significance = np.nan_to_num(significance, nan=0.0)
     significance_total = round(np.sqrt(np.sum(significance**2)),3)
     ax2 = ax1.twinx()  # Erstellt die rechte Achse
-    ax2.step(np.linspace(-14+19/100, 5, 100),significance, label=f"significance (total = {significance_total})", color="black")
+    ax2.step(np.linspace(-14+19/20, 5, 20),significance, label=f"significance (total = {significance_total})", color="black")
     ax2.set_ylabel('Significance')
     ax2.tick_params(axis='y', labelcolor='black')
 
@@ -134,7 +140,7 @@ IDs=["etau__res1b__os__iso","etau__res2b__os__iso","mutau__res1b__os__iso","muta
 #Neudefinition von dy ist wichtig!
 dy = Hist(
     hist.axis.StrCategory([], name="Zerfallskanal", growth=True),  #diese Achse wird später gestacked
-    hist.axis.Regular(bins=100, start=-14, stop=5, name="x")
+    hist.axis.Regular(bins=20, start=-14, stop=5, name="x")
 )
 
 for i,id in enumerate([147,151,175,179,203,207],start=0): #id steht für category ids, i ist index
@@ -160,10 +166,10 @@ for i,id in enumerate([147,151,175,179,203,207],start=0): #id steht für categor
     background_bins = np.sum(dy.values(),axis=0)
     signal_bins = hh.values()
     significance = signal_bins**2/background_bins
-    significance = np.nan_to_num(significance, nan=0.0)
+    #significance = np.nan_to_num(significance, nan=0.0)
     significance_total = round(np.sqrt(np.sum(significance**2)),3)
     ax2 = ax1.twinx()  # Erstellt die rechte Achse
-    ax2.step(np.linspace(-14+19/100, 5, 100),significance, label=f"significance (total = {significance_total})", color="black")
+    ax2.step(np.linspace(-14+19/20, 5, 20),significance, label=f"significance (total = {significance_total})", color="black")
     ax2.set_ylabel('Significance')
     ax2.tick_params(axis='y', labelcolor='black')
 
