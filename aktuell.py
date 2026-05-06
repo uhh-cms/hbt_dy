@@ -1,40 +1,43 @@
-#1. Histogramme nach channel aufteilen, fillen (für dy nach Zerfallskanal aufteilen + stacken), plotten.
-for i in [1,2,3]:
-    dy.fill(x=events_dy.run3_dnn_moe_hh[(events_dy.channel_id == i) & (events_dy.gen_ll_pdgid == 11)],Zerfallskanal=r"gen: DY $\to e^+e^-$", weight=events_dy.event_weight[(events_dy.channel_id == i) & (events_dy.gen_ll_pdgid == 11)])    #maske für channel (und bei dy Zerfallskanal) in eckigen Klammern
-    dy.fill(x=events_dy.run3_dnn_moe_hh[(events_dy.channel_id == i) & (events_dy.gen_ll_pdgid == 13)],Zerfallskanal=r"gen: DY $\to \mu^+\mu^-$", weight=events_dy.event_weight[(events_dy.channel_id == i) & (events_dy.gen_ll_pdgid == 13)])
-    dy.fill(x=events_dy.run3_dnn_moe_hh[(events_dy.channel_id == i) & (events_dy.gen_ll_pdgid == 15)],Zerfallskanal=r"gen: DY $\to \tau^+\tau^-$", weight=events_dy.event_weight[(events_dy.channel_id == i) & (events_dy.gen_ll_pdgid == 15)])
 
-    tt.fill(events_tt.run3_dnn_moe_hh[events_tt.channel_id == i],weight=events_tt.event_weight[events_tt.channel_id == i])
-    hh.fill(events_hh.run3_dnn_moe_hh[events_hh.channel_id == i],weight=events_hh.event_weight[events_hh.channel_id == i])
+from dataclasses import dataclass, field
 
-    #from IPython import embed; embed(header="MESSAGE Line 34 | File: hists_1.py")
-    fig, ax1 = plt.subplots()
-    background_bins = np.sum(dy.values(),axis=0)+ tt.values()
-    signal_bins = hh.values()
-    significance = signal_bins**2/background_bins
-    ax2 = ax1.twinx()  # Erstellt die rechte Achse
-    ax2.plot(np.linspace(0, 1, 100),significance, label="significance")
-    ax2.set_ylabel('Exponentielle Werte')
-    ax2.tick_params(axis='y', labelcolor='b')
-    #plt.plot(significance)
+@dataclass
+class Smartphone:
+    # Pflichtfelder (müssen beim Erstellen angegeben werden)
+    modell: str
+    marke: str
+    
+    # Felder mit Standardwerten (optional beim Erstellen)
+    speicher_gb: int = 128
+    ist_eingeschaltet: bool = False
+    
+    # Ein Feld, das eine Liste ist (erfordert default_factory)
+    installierte_apps: list = field(default_factory=lambda: ["Kamera", "Einstellungen"])
 
-    plt.yscale('log')    #Achse logarithmisch skalieren 
+    def einschalten(self):
+        self.ist_eingeschaltet = True
+        print(f"Das {self.modell} wurde eingeschaltet.")
+    def ausschalten(self):
+        self.ist_eingeschaltet = False
+        print(f"Das {self.modell} wurde ausgeschaltet.")
 
-    # Stack-Plot erstellen
-    stack = dy.stack("Zerfallskanal")
-    stack.plot(stack=True, histtype="fill") # 'stack=True' ist entscheidend!
 
-    tt.plot(label=r"$t\bar{t}$")
-    hh.plot(label=r"$HH$")
+from IPython import embed; embed(header="MESSAGE Line 22 | File: aktuell.py")
 
-    plt.legend()
-    plt.ylabel("number of events (weighted)")
-    plt.xlabel("Di-Higgs-outputnode of the DNN")
-    plt.title(f"Histogram of DNN-outputnode $HH$ for dy,tt and hh simulatioins - {channelname_r[i-1]}-channel")
-    plt.savefig(f"plots/hist_hhnode/{channelname[i-1]}-channel.png", dpi=300, bbox_inches='tight')
-    plt.figure()
+# --- Nutzung ---
 
-    #histogramme für nächste iteration clearen
-    dy.reset()
-    tt.reset()
-    hh.reset()
+mein_handy = Smartphone("Pixel 10","Google",speicher_gb=256,ist_eingeschaltet=True)
+# 1. Eine Instanz erstellen (Objekt)
+dein_handy = Smartphone(modell="iPhone 15", marke="Apple", speicher_gb=256)
+
+# 2. Eine zweite Instanz erstellen (nutzt Standardwerte)
+sein_handy = Smartphone(modell="Pixel 8", marke="Google")
+
+from IPython import embed; embed(header="MESSAGE Line 36 | File: aktuell.py")
+
+# 3. Zugriff auf die Daten
+print(f"Mein Handy hat {mein_handy.speicher_gb} GB.")
+print(f"Deine Apps: {dein_handy.installierte_apps}")
+
+# 4. Eine Methode aufrufen
+mein_handy.einschalten()
