@@ -30,11 +30,11 @@ def stable_logit(x, eps=1e-6, limit=5.0):
 #Histogramme definieren, 2-D für dy wegen Unterteilung
 dy = Hist(
     hist.axis.StrCategory([], name="Zerfallskanal", growth=True),  #diese Achse wird später gestacked
-    hist.axis.Regular(bins=20, start=-14, stop=5, name="x")
+    hist.axis.Regular(bins=50, start=-14, stop=5, name="x")
 )
-tt = Hist(hist.axis.Regular(bins=20, start=-14, stop=5, name="x"))
-hh = Hist(hist.axis.Regular(bins=20, start=-14, stop=5, name="x"))
-s = Hist(hist.axis.Regular(bins=20, start=-14, stop=5, name="x"))
+tt = Hist(hist.axis.Regular(bins=50, start=-14, stop=5, name="x"))
+hh = Hist(hist.axis.Regular(bins=50, start=-14, stop=5, name="x"))
+s = Hist(hist.axis.Regular(bins=50, start=-14, stop=5, name="x"))
 
 #Namen der decay channel definieren:
 channelname=["e-tau", "mu-tau", "tau-tau"]
@@ -69,7 +69,7 @@ for i in [1,2,3]:
     significance = signal_bins**2/background_bins
     significance_total = round(np.sqrt(np.sum(significance**2)),3)
     ax2 = ax1.twinx()  # Erstellt die rechte Achse
-    ax2.step(np.linspace(-14+19/20, 5, 20),significance, label=f"significance (total = {significance_total})", color="black")
+    ax2.step(np.linspace(-14+19/50, 5, 50),significance, label=f"significance (total = {significance_total})", color="black")
     ax2.set_ylabel('Significance')
     ax2.tick_params(axis='y', labelcolor='black')
 
@@ -121,9 +121,8 @@ for i in [1,2,3]: #i steht für den channel
     significance = signal_bins**2/background_bins
     #significance = np.nan_to_num(significance, nan=0.0)
     significance_total = round(np.sqrt(np.sum(significance**2)),3)
-    from IPython import embed; embed(header="MESSAGE Line 112 | File: hists_1_logit.py")
     ax2 = ax1.twinx()  # Erstellt die rechte Achse
-    ax2.step(np.linspace(-14+19/20, 5, 20),significance, label=f"significance (total = {significance_total})", color="black")
+    ax2.step(np.linspace(-14+19/50, 5, 50),significance, label=f"significance (total = {significance_total})", color="black")
     ax2.set_ylabel('Significance')
     ax2.tick_params(axis='y', labelcolor='black')
 
