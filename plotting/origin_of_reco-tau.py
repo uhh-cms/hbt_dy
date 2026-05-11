@@ -49,7 +49,7 @@ plt.xticks(x_labels,labels)
 # Raster im Hintergrund für bessere Lesbarkeit
 plt.grid(axis='y', linestyle='--', alpha=0.7)
 
-plt.savefig("plots/bar-charts/origin-reco-tau_with_cut_and_weights.png", dpi=300, bbox_inches='tight')
+plt.savefig("plots/fake-taus/origin-reco-tau_with_cut_and_weights.png", dpi=300, bbox_inches='tight')
 plt.figure()
 
 #====================================================
@@ -83,7 +83,7 @@ plt.xticks(x_labels,labels)
 # Raster im Hintergrund für bessere Lesbarkeit
 plt.grid(axis='y', linestyle='--', alpha=0.7)
 
-plt.savefig("plots/bar-charts/origin-reco-tau_with_weights_no_cut.png", dpi=300, bbox_inches='tight')
+plt.savefig("plots/fake-taus/origin-reco-tau_with_weights_no_cut.png", dpi=300, bbox_inches='tight')
 plt.figure()
 
 #====================================================
@@ -117,7 +117,7 @@ plt.xticks(x_labels,labels)
 # Raster im Hintergrund für bessere Lesbarkeit
 plt.grid(axis='y', linestyle='--', alpha=0.7)
 
-plt.savefig("plots/bar-charts/origin-reco-tau_with_cut_no_weights.png", dpi=300, bbox_inches='tight')
+plt.savefig("plots/fake-taus/origin-reco-tau_with_cut_no_weights.png", dpi=300, bbox_inches='tight')
 plt.figure()
 
 #====================================================
@@ -151,7 +151,7 @@ plt.xticks(x_labels,labels)
 # Raster im Hintergrund für bessere Lesbarkeit
 plt.grid(axis='y', linestyle='--', alpha=0.7)
 
-plt.savefig("plots/bar-charts/origin-reco-tau_no_cut_no_weights.png", dpi=300, bbox_inches='tight')
+plt.savefig("plots/fake-taus/origin-reco-tau_no_cut_no_weights.png", dpi=300, bbox_inches='tight')
 plt.figure()
 
 
@@ -163,6 +163,7 @@ plt.figure()
 hh_cut = 0.9
 dy_mask = events_dy.run3_dnn_moe_hh > hh_cut
 
+IDs=["etau__res1b__os__iso","etau__res2b__os__iso","mutau__res1b__os__iso","mutau__res2b__os__iso","tautau__res1b__os__iso","tautau__res2b__os__iso"]
 
 for i,id in enumerate([147,151,175,179,203,207],start=0): #id steht für category ids, i ist index
     id_mask = ak.any(events_dy.category_ids == id,axis=1)
@@ -183,7 +184,7 @@ for i,id in enumerate([147,151,175,179,203,207],start=0): #id steht für categor
 
     plt.xlabel('Origins', fontsize=12)
     plt.ylabel('Number of events', fontsize=12)
-    plt.title(fr'Origins of reconstructed $\tau_h$ (cat_id: {id}, ${hh_cut}$ cut)', fontsize=14)
+    plt.title(fr'Origins of reconstructed $\tau_h$ ({IDs[i]}, ${hh_cut}$ cut)', fontsize=14)
 
     # Sicherstellen, dass nur ganze Zahlen auf der X-Achse stehen
     plt.xticks(x_labels,labels)
@@ -191,5 +192,53 @@ for i,id in enumerate([147,151,175,179,203,207],start=0): #id steht für categor
     # Raster im Hintergrund für bessere Lesbarkeit
     plt.grid(axis='y', linestyle='--', alpha=0.7)
 
-    plt.savefig(f"plots/bar-charts/cat_id/origin-reco-tau_{id}.png", dpi=300, bbox_inches='tight')
+    plt.savefig(f"plots/fake-taus/cat_id/origin-reco-tau_{IDs[i]}.png", dpi=300, bbox_inches='tight')
     plt.figure()
+
+
+#=====================================================
+#3.1 DNN output für verschiedene Anzahlen an tau fakes
+#=====================================================
+#für etau und mutau nur die erste Zahl des ak arrays nehmen! 
+weights=events_dy.event_weight
+
+dy = Hist(
+    hist.axis.StrCategory([], name="fakes_nr", growth=True),  #diese Achse wird später gestacked
+    hist.axis.Regular(bins=100, start=0, stop=1, name="x")
+)
+
+IDs=["etau__res1b__os__iso","etau__res2b__os__iso","mutau__res1b__os__iso","mutau__res2b__os__iso","tautau__res1b__os__iso","tautau__res2b__os__iso"]
+
+for i,id in enumerate([147,151,175,179,203,207],start=0): #id steht für category ids, i ist index
+    id_mask = ak.any(events_dy.category_ids == id,axis=1)
+    fakes_temp = ak.where(events_dy.tau_genPartFlav < 5, 1,events_dy.tau_genPartFlav)
+    fakes = ak.where(fakes_temp == 5, 0,fakes_temp)
+
+    #weights und fake anzahl definieren
+    if id in [147,151,175,179]:
+        #weights_ak = ak.zeros_like(events_dy.tau_genPartFlav[:,0]) + events_dy.event_weight
+        fakes_sum = fakes[:,0] #nur ersen jet evaluieren
+    elif id in [203,207]:
+        #weights_ak = ak.zeros_like(events_dy.tau_genPartFlav) + events_dy.event_weight
+        fakes_sum = ak.sum(fakes, axis=1)
+        print(max(fakes_sum[id_mask]))
+
+    dy.fill(x=events_dy.run3_dnn_moe_hh[id_mask & fakes_sum==0],fakes_nr="0_fake_tau", weight=weights[id_mask & fakes_sum==0])
+    dy.fill(x=events_dy.run3_dnn_moe_hh[id_mask & fakes_sum==1],fakes_nr="1_fake_tau", weight=weights[id_mask & fakes_sum==1])
+    dy.fill(x=events_dy.run3_dnn_moe_hh[id_mask & fakes_sum==2],fakes_nr="2_fake_tau", weight=weights[id_mask & fakes_sum==2])
+    dy.fill(x=events_dy.run3_dnn_moe_hh[id_mask & fakes_sum==3],fakes_nr="3_fake_tau", weight=weights[id_mask & fakes_sum==3])
+    
+    # Stack-Plot erstellen
+    stack = dy.stack("fakes_nr")
+    stack.plot(stack=True, histtype="fill")
+
+    plt.yscale('log')
+    plt.legend()
+    plt.xlabel("Di-Higgs-outputnode of the DNN")
+    plt.ylabel("Number of events")
+    plt.title(f"Hist of DNN-outputnode $HH$ for DY-simulations ({IDs[i]})")
+    plt.savefig(f"plots/fake-taus/cat_id/hist_nr-of-fakes_{IDs[i]}.png", dpi=300, bbox_inches='tight')
+    plt.figure()
+
+    #histogramme für nächste iteration clearen
+    dy.reset()
