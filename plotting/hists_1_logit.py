@@ -66,7 +66,8 @@ for i in [1,2,3]:
     #zweite Achse
     background_bins = np.sum(dy.values(),axis=0)+ tt.values()
     signal_bins = hh.values()
-    significance = signal_bins**2/background_bins
+    significance = signal_bins/np.sqrt(background_bins)
+    significance = np.nan_to_num(significance, nan=0.0) #ist hier möglich, da signal bei den Problemstellen = 0 ist
     significance_total = round(np.sqrt(np.sum(significance**2)),3)
     ax2 = ax1.twinx()  # Erstellt die rechte Achse
     ax2.step(np.linspace(-14+19/50, 5, 50),significance, label=f"significance (total = {significance_total})", color="black")
@@ -118,8 +119,8 @@ for i in [1,2,3]: #i steht für den channel
     #zweite Achse
     background_bins = np.sum(dy.values(),axis=0)
     signal_bins = hh.values()
-    significance = signal_bins**2/background_bins
-    #significance = np.nan_to_num(significance, nan=0.0)
+    significance = signal_bins/np.sqrt(background_bins)
+    significance = np.nan_to_num(significance, nan=0.0) #ist hier möglich, da signal bei den Problemstellen = 0 ist
     significance_total = round(np.sqrt(np.sum(significance**2)),3)
     ax2 = ax1.twinx()  # Erstellt die rechte Achse
     ax2.step(np.linspace(-14+19/50, 5, 50),significance, label=f"significance (total = {significance_total})", color="black")

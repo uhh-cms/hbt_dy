@@ -106,8 +106,8 @@ for i in [1,2,3]: #i steht für den channel
     #zweite Achse
     background_bins = np.sum(dy.values(),axis=0)
     signal_bins = hh.values()
-    significance = signal_bins**2/background_bins
-    #significance = np.nan_to_num(significance, nan=0.0)
+    significance = signal_bins/np.sqrt(background_bins)
+    significance = np.nan_to_num(significance, nan=0.0)  #ist möglich, denn signal ist in den betroffenen bins = 0
     significance_total = round(np.sqrt(np.sum(significance**2)),3)
     ax2 = ax1.twinx()  # Erstellt die rechte Achse
     ax2.step(np.linspace(-14+19/50, 5, 50),significance, label=f"significance (total = {significance_total})", color="black")
@@ -165,7 +165,7 @@ for i,id in enumerate([147,151,175,179,203,207],start=0): #id steht für categor
     #zweite Achse
     background_bins = np.sum(dy.values(),axis=0)
     signal_bins = hh.values()
-    significance = signal_bins**2/background_bins
+    significance = signal_bins/np.sqrt(background_bins)
     significance = np.nan_to_num(significance, nan=0.0)  # Das ist hier möglich, da hier bei background=0 auch signal=0 gilt
     significance_total = round(np.sqrt(np.sum(significance**2)),3)
     ax2 = ax1.twinx()  # Erstellt die rechte Achse
