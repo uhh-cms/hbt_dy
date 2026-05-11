@@ -124,6 +124,7 @@ for i in [1,2,3]: #i steht für den channel
 
     plt.xlabel("Di-Higgs-outputnode of the DNN - corrected with logit function")
     plt.title(f"Histogram of DNN-outputnode $HH$ for dy,tt and hh simulatioins - {channelname_r[i-1]}-channel")
+    plt.savefig(f"plots/hists_HH-outputnode/segmenting_in_pdgid_and_tau/logit_binning/stacked_tt/channel_id/{channelname[i-1]}-channel.png", dpi=300, bbox_inches='tight')
     plt.savefig(f"plots/hist_hhnode_stacked-tt/further_subdivision/logit_{channelname[i-1]}-channel.png", dpi=300, bbox_inches='tight')
     plt.figure()
 
@@ -182,7 +183,8 @@ for i,id in enumerate([147,151,175,179,203,207],start=0): #id steht für categor
     ax1.legend(h1 + h2, l1 + l2, loc="upper center", ncol=2, frameon=True)
 
     plt.xlabel("Di-Higgs-outputnode of the DNN - corrected with logit function")
-    plt.title(f"Histogram of DNN-outputnode $HH$ for dy,tt and hh simulatioins -{IDs[i]}- cat_id:{id}")
+    plt.title(f"Histogram of DNN-outputnode $HH$ for dy,tt and hh simulatioins -{IDs[i]}-")
+    plt.savefig(f"plots/hists_HH-outputnode/segmenting_in_pdgid_and_tau/logit_binning/stacked_tt/category_id/{IDs[i]}.png", dpi=300, bbox_inches='tight')
     plt.savefig(f"plots/hist_hhnode_stacked-tt/channel_unterteilung/logit_{id}-cat_id.png", dpi=300, bbox_inches='tight')
     plt.figure()
 

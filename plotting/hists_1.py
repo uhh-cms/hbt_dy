@@ -65,6 +65,7 @@ for i in [1,2,3]:
 
     plt.xlabel("Di-Higgs-outputnode of the DNN")
     plt.title(f"Histogram of DNN-outputnode $HH$ for dy,tt and hh simulatioins - {channelname_r[i-1]}-channel")
+    plt.savefig(f"plots/hists_HH-outputnode/segmenting_in_pdgid/linear_binning/separate_tt/channel_id/{channelname[i-1]}-channel.png", dpi=300, bbox_inches='tight')
     plt.savefig(f"plots/hist_hhnode/{channelname[i-1]}-channel.png", dpi=300, bbox_inches='tight')
     plt.figure()
 
@@ -116,6 +117,7 @@ for i in [1,2,3]: #i steht für den channel
 
     plt.xlabel("Di-Higgs-outputnode of the DNN")
     plt.title(f"Histogram of DNN-outputnode $HH$ for dy,tt and hh simulatioins - {channelname_r[i-1]}-channel")
+    plt.savefig(f"plots/hists_HH-outputnode/segmenting_in_pdgid/linear_binning/stacked_tt/channel_id/{channelname[i-1]}-channel.png", dpi=300, bbox_inches='tight')
     plt.savefig(f"plots/hist_hhnode_stacked-tt/{channelname[i-1]}-channel.png", dpi=300, bbox_inches='tight')
     plt.figure()
 
