@@ -44,8 +44,7 @@ result_el = np.sum(zahlen_array_el,axis=2)
 result_el = np.sum(result_el,axis=1)
 result_pos = np.sum(zahlen_array_pos,axis=2)
 result_pos = np.sum(result_pos,axis=1)
-el_number = result_el + result_pos
-el_number = el_number[(events_dy.gen_ll_pdgid == 15)]   #maske für ausschließlich tau tau zerfälle
+el_number = result_el + result_pos  #Achtung, maske gilt für ausschließlich tau tau zerfälle, sie ist aber für alle events definiert
 
 #array mit anzahl der el bzw pos pro zerfall (Zahl zwischen 0 und 2)
 maske_mu = (events_dy.gen_dy_tau_decayproducts == 13)
@@ -58,34 +57,35 @@ result_mu = np.sum(result_mu,axis=1)
 result_antimu = np.sum(zahlen_array_antimu,axis=2)
 result_antimu = np.sum(result_antimu,axis=1)
 mu_number = result_mu + result_antimu
-mu_number = mu_number[(events_dy.gen_ll_pdgid == 15)]
 
 #für die Anzahl hadronischer taus pro event erst die anderen zerfälle (oben) von np.twos abziehen.
 #Aber nicht vergessen, die tautau-maske noch drüberzusetzen, weil sonst alle anderen dy-subprozesse auch eine 2 zugewiesen bekommen.
-hadron_number=np.ones([np.sum(events_dy.gen_ll_pdgid == 15)]) *2 - el_number - mu_number
+hadron_number=np.ones(len(events_dy)) *2 - el_number - mu_number
 
 #Zwischenergebnis (3dim. array, dass jedem event #el,#mu,#tau zerfälle zuordnet)
-tau_zerfallskanäle=np.array([el_number,mu_number,hadron_number])
+tau_zerfallskanäle=np.array([el_number,mu_number,hadron_number])  #Dieses array sagt, wie viele el, mu, tauh in einem DY event vorkamen. 
+#Es ergibt nur in Kombination mit einer tau-maske sinn (events_dy.gen_ll_pdgid == 15) und darf auch nur auf tau events angewendet werden!
 
 
 
-#6.1 stacked hist weiter in subprozesse unterteilen (tau tau weiter unterteilen wie bei 5. im bar chart)
 #Masken definieren:
 el_pdgid_mask  = events_dy.gen_ll_pdgid == 11
 mu_pdgid_mask  = events_dy.gen_ll_pdgid == 13
 tau_pdgid_mask = events_dy.gen_ll_pdgid == 15
+
+#6.1 stacked hist weiter in subprozesse unterteilen (tau tau weiter unterteilen wie bei 5. im bar chart)
 
 for i in [1,2,3]: #i steht für den channel
     dy.fill(x=stable_logit(events_dy.run3_dnn_moe_hh[(events_dy.channel_id == i) & (el_pdgid_mask)]),Zerfallskanal=r"$e^+e^-$", weight=events_dy.event_weight[(events_dy.channel_id == i) & (el_pdgid_mask)])    #maske für channel (und bei dy Zerfallskanal) in eckigen Klammern
     dy.fill(x=stable_logit(events_dy.run3_dnn_moe_hh[(events_dy.channel_id == i) & (mu_pdgid_mask)]),Zerfallskanal=r"$\mu^+\mu^-$", weight=events_dy.event_weight[(events_dy.channel_id == i) & (mu_pdgid_mask)])
 
 
-    dy.fill(x=stable_logit(events_dy.run3_dnn_moe_hh[(tau_pdgid_mask)][(events_dy.channel_id[tau_pdgid_mask] == i) & (tau_zerfallskanäle[0]==2) & (tau_zerfallskanäle[1]==0) & (tau_zerfallskanäle[2]==0)]),Zerfallskanal=r"$\tau_e\tau_e$", weight=events_dy.event_weight[(tau_pdgid_mask)][(events_dy.channel_id[tau_pdgid_mask] == i) & (tau_zerfallskanäle[0]==2) & (tau_zerfallskanäle[1]==0) & (tau_zerfallskanäle[2]==0)])
-    dy.fill(x=stable_logit(events_dy.run3_dnn_moe_hh[(tau_pdgid_mask)][(events_dy.channel_id[tau_pdgid_mask] == i) & (tau_zerfallskanäle[0]==0) & (tau_zerfallskanäle[1]==2) & (tau_zerfallskanäle[2]==0)]),Zerfallskanal=r"$\tau_\mu\tau_\mu$", weight=events_dy.event_weight[(tau_pdgid_mask)][(events_dy.channel_id[tau_pdgid_mask] == i) & (tau_zerfallskanäle[0]==0) & (tau_zerfallskanäle[1]==2) & (tau_zerfallskanäle[2]==0)])
-    dy.fill(x=stable_logit(events_dy.run3_dnn_moe_hh[(tau_pdgid_mask)][(events_dy.channel_id[tau_pdgid_mask] == i) & (tau_zerfallskanäle[0]==0) & (tau_zerfallskanäle[1]==0) & (tau_zerfallskanäle[2]==2)]),Zerfallskanal=r"$\tau_h\tau_h$", weight=events_dy.event_weight[(tau_pdgid_mask)][(events_dy.channel_id[tau_pdgid_mask] == i) & (tau_zerfallskanäle[0]==0) & (tau_zerfallskanäle[1]==0) & (tau_zerfallskanäle[2]==2)])
-    dy.fill(x=stable_logit(events_dy.run3_dnn_moe_hh[(tau_pdgid_mask)][(events_dy.channel_id[tau_pdgid_mask] == i) & (tau_zerfallskanäle[0]==1) & (tau_zerfallskanäle[1]==1) & (tau_zerfallskanäle[2]==0)]),Zerfallskanal=r"$\tau_e\tau_\mu$", weight=events_dy.event_weight[(tau_pdgid_mask)][(events_dy.channel_id[tau_pdgid_mask] == i) & (tau_zerfallskanäle[0]==1) & (tau_zerfallskanäle[1]==1) & (tau_zerfallskanäle[2]==0)])
-    dy.fill(x=stable_logit(events_dy.run3_dnn_moe_hh[(tau_pdgid_mask)][(events_dy.channel_id[tau_pdgid_mask] == i) & (tau_zerfallskanäle[0]==1) & (tau_zerfallskanäle[1]==0) & (tau_zerfallskanäle[2]==1)]),Zerfallskanal=r"$\tau_e\tau_h$", weight=events_dy.event_weight[(tau_pdgid_mask)][(events_dy.channel_id[tau_pdgid_mask] == i) & (tau_zerfallskanäle[0]==1) & (tau_zerfallskanäle[1]==0) & (tau_zerfallskanäle[2]==1)])
-    dy.fill(x=stable_logit(events_dy.run3_dnn_moe_hh[(tau_pdgid_mask)][(events_dy.channel_id[tau_pdgid_mask] == i) & (tau_zerfallskanäle[0]==0) & (tau_zerfallskanäle[1]==1) & (tau_zerfallskanäle[2]==1)]),Zerfallskanal=r"$\tau_\mu\tau_h$", weight=events_dy.event_weight[(tau_pdgid_mask)][(events_dy.channel_id[tau_pdgid_mask] == i) & (tau_zerfallskanäle[0]==0) & (tau_zerfallskanäle[1]==1) & (tau_zerfallskanäle[2]==1)])
+    dy.fill(x=stable_logit(events_dy.run3_dnn_moe_hh[(tau_pdgid_mask) & (events_dy.channel_id == i) & (tau_zerfallskanäle[0]==2) & (tau_zerfallskanäle[1]==0) & (tau_zerfallskanäle[2]==0)]),Zerfallskanal=r"$\tau_e\tau_e$", weight=events_dy.event_weight[(tau_pdgid_mask) & (events_dy.channel_id == i) & (tau_zerfallskanäle[0]==2) & (tau_zerfallskanäle[1]==0) & (tau_zerfallskanäle[2]==0)])
+    dy.fill(x=stable_logit(events_dy.run3_dnn_moe_hh[(tau_pdgid_mask) & (events_dy.channel_id == i) & (tau_zerfallskanäle[0]==0) & (tau_zerfallskanäle[1]==2) & (tau_zerfallskanäle[2]==0)]),Zerfallskanal=r"$\tau_\mu\tau_\mu$", weight=events_dy.event_weight[(tau_pdgid_mask) & (events_dy.channel_id == i) & (tau_zerfallskanäle[0]==0) & (tau_zerfallskanäle[1]==2) & (tau_zerfallskanäle[2]==0)])
+    dy.fill(x=stable_logit(events_dy.run3_dnn_moe_hh[(tau_pdgid_mask) & (events_dy.channel_id == i) & (tau_zerfallskanäle[0]==0) & (tau_zerfallskanäle[1]==0) & (tau_zerfallskanäle[2]==2)]),Zerfallskanal=r"$\tau_h\tau_h$", weight=events_dy.event_weight[(tau_pdgid_mask) & (events_dy.channel_id == i) & (tau_zerfallskanäle[0]==0) & (tau_zerfallskanäle[1]==0) & (tau_zerfallskanäle[2]==2)])
+    dy.fill(x=stable_logit(events_dy.run3_dnn_moe_hh[(tau_pdgid_mask) & (events_dy.channel_id == i) & (tau_zerfallskanäle[0]==1) & (tau_zerfallskanäle[1]==1) & (tau_zerfallskanäle[2]==0)]),Zerfallskanal=r"$\tau_e\tau_\mu$", weight=events_dy.event_weight[(tau_pdgid_mask) & (events_dy.channel_id == i) & (tau_zerfallskanäle[0]==1) & (tau_zerfallskanäle[1]==1) & (tau_zerfallskanäle[2]==0)])
+    dy.fill(x=stable_logit(events_dy.run3_dnn_moe_hh[(tau_pdgid_mask) & (events_dy.channel_id == i) & (tau_zerfallskanäle[0]==1) & (tau_zerfallskanäle[1]==0) & (tau_zerfallskanäle[2]==1)]),Zerfallskanal=r"$\tau_e\tau_h$", weight=events_dy.event_weight[(tau_pdgid_mask) & (events_dy.channel_id == i) & (tau_zerfallskanäle[0]==1) & (tau_zerfallskanäle[1]==0) & (tau_zerfallskanäle[2]==1)])
+    dy.fill(x=stable_logit(events_dy.run3_dnn_moe_hh[(tau_pdgid_mask) & (events_dy.channel_id == i) & (tau_zerfallskanäle[0]==0) & (tau_zerfallskanäle[1]==1) & (tau_zerfallskanäle[2]==1)]),Zerfallskanal=r"$\tau_\mu\tau_h$", weight=events_dy.event_weight[(tau_pdgid_mask) & (events_dy.channel_id == i) & (tau_zerfallskanäle[0]==0) & (tau_zerfallskanäle[1]==1) & (tau_zerfallskanäle[2]==1)])
 
 
     dy.fill(x=stable_logit(events_tt.run3_dnn_moe_hh[events_tt.channel_id == i]),Zerfallskanal=r"$t\bar{t}$", weight=events_tt.event_weight[events_tt.channel_id == i])
@@ -125,7 +125,6 @@ for i in [1,2,3]: #i steht für den channel
     plt.xlabel("Di-Higgs-outputnode of the DNN - corrected with logit function")
     plt.title(f"Histogram of DNN-outputnode $HH$ for dy,tt and hh simulatioins - {channelname_r[i-1]}-channel")
     plt.savefig(f"plots/hists_HH-outputnode/segmenting_in_pdgid_and_tau/logit_binning/stacked_tt/channel_id/{channelname[i-1]}-channel.png", dpi=300, bbox_inches='tight')
-    plt.savefig(f"plots/hist_hhnode_stacked-tt/further_subdivision/logit_{channelname[i-1]}-channel.png", dpi=300, bbox_inches='tight')
     plt.figure()
 
     #histogramme für nächste iteration clearen
@@ -145,12 +144,20 @@ dy = Hist(
 )
 
 for i,id in enumerate([147,151,175,179,203,207],start=0): #id steht für category ids, i ist index
-    dy.fill(x=stable_logit(events_dy.run3_dnn_moe_hh[ak.any(events_dy.category_ids == id,axis=1) & (events_dy.gen_ll_pdgid == 11)]),Zerfallskanal=r"$e^+e^-$", weight=events_dy.event_weight[ak.any(events_dy.category_ids == id,axis=1) & (events_dy.gen_ll_pdgid == 11)])    #maske für channel (und bei dy Zerfallskanal) in eckigen Klammern
-    dy.fill(x=stable_logit(events_dy.run3_dnn_moe_hh[ak.any(events_dy.category_ids == id,axis=1) & (events_dy.gen_ll_pdgid == 13)]),Zerfallskanal=r"$\mu^+\mu^-$", weight=events_dy.event_weight[ak.any(events_dy.category_ids == id,axis=1) & (events_dy.gen_ll_pdgid == 13)])
-    dy.fill(x=stable_logit(events_dy.run3_dnn_moe_hh[ak.any(events_dy.category_ids == id,axis=1) & (events_dy.gen_ll_pdgid == 15)]),Zerfallskanal=r"$\tau^+\tau^-$", weight=events_dy.event_weight[ak.any(events_dy.category_ids == id,axis=1) & (events_dy.gen_ll_pdgid == 15)])
+    dy.fill(x=stable_logit(events_dy.run3_dnn_moe_hh[ak.any(events_dy.category_ids == id,axis=1) & (el_pdgid_mask)]),Zerfallskanal=r"$e^+e^-$", weight=events_dy.event_weight[ak.any(events_dy.category_ids == id,axis=1) & (el_pdgid_mask)])    #maske für channel (und bei dy Zerfallskanal) in eckigen Klammern
+    dy.fill(x=stable_logit(events_dy.run3_dnn_moe_hh[ak.any(events_dy.category_ids == id,axis=1) & (mu_pdgid_mask)]),Zerfallskanal=r"$\mu^+\mu^-$", weight=events_dy.event_weight[ak.any(events_dy.category_ids == id,axis=1) & (mu_pdgid_mask)])
+
+    dy.fill(x=stable_logit(events_dy.run3_dnn_moe_hh[ak.any(events_dy.category_ids == id,axis=1) & (tau_pdgid_mask) & (tau_zerfallskanäle[0]==2) & (tau_zerfallskanäle[1]==0) & (tau_zerfallskanäle[2]==0)]),Zerfallskanal=r"$\tau_e\tau_e$", weight=events_dy.event_weight[ak.any(events_dy.category_ids == id,axis=1) & (tau_pdgid_mask) & (tau_zerfallskanäle[0]==2) & (tau_zerfallskanäle[1]==0) & (tau_zerfallskanäle[2]==0)])
+    dy.fill(x=stable_logit(events_dy.run3_dnn_moe_hh[ak.any(events_dy.category_ids == id,axis=1) & (tau_pdgid_mask) & (tau_zerfallskanäle[0]==0) & (tau_zerfallskanäle[1]==2) & (tau_zerfallskanäle[2]==0)]),Zerfallskanal=r"$\tau_\mu\tau_\mu$", weight=events_dy.event_weight[ak.any(events_dy.category_ids == id,axis=1) & (tau_pdgid_mask) & (tau_zerfallskanäle[0]==0) & (tau_zerfallskanäle[1]==2) & (tau_zerfallskanäle[2]==0)])
+    dy.fill(x=stable_logit(events_dy.run3_dnn_moe_hh[ak.any(events_dy.category_ids == id,axis=1) & (tau_pdgid_mask) & (tau_zerfallskanäle[0]==0) & (tau_zerfallskanäle[1]==0) & (tau_zerfallskanäle[2]==2)]),Zerfallskanal=r"$\tau_h\tau_h$", weight=events_dy.event_weight[ak.any(events_dy.category_ids == id,axis=1) & (tau_pdgid_mask) & (tau_zerfallskanäle[0]==0) & (tau_zerfallskanäle[1]==0) & (tau_zerfallskanäle[2]==2)])
+    dy.fill(x=stable_logit(events_dy.run3_dnn_moe_hh[ak.any(events_dy.category_ids == id,axis=1) & (tau_pdgid_mask) & (tau_zerfallskanäle[0]==1) & (tau_zerfallskanäle[1]==1) & (tau_zerfallskanäle[2]==0)]),Zerfallskanal=r"$\tau_e\tau_\mu$", weight=events_dy.event_weight[ak.any(events_dy.category_ids == id,axis=1) & (tau_pdgid_mask) & (tau_zerfallskanäle[0]==1) & (tau_zerfallskanäle[1]==1) & (tau_zerfallskanäle[2]==0)])
+    dy.fill(x=stable_logit(events_dy.run3_dnn_moe_hh[ak.any(events_dy.category_ids == id,axis=1) & (tau_pdgid_mask) & (tau_zerfallskanäle[0]==1) & (tau_zerfallskanäle[1]==0) & (tau_zerfallskanäle[2]==1)]),Zerfallskanal=r"$\tau_e\tau_h$", weight=events_dy.event_weight[ak.any(events_dy.category_ids == id,axis=1) & (tau_pdgid_mask) & (tau_zerfallskanäle[0]==1) & (tau_zerfallskanäle[1]==0) & (tau_zerfallskanäle[2]==1)])
+    dy.fill(x=stable_logit(events_dy.run3_dnn_moe_hh[ak.any(events_dy.category_ids == id,axis=1) & (tau_pdgid_mask) & (tau_zerfallskanäle[0]==0) & (tau_zerfallskanäle[1]==1) & (tau_zerfallskanäle[2]==1)]),Zerfallskanal=r"$\tau_\mu\tau_h$", weight=events_dy.event_weight[ak.any(events_dy.category_ids == id,axis=1) & (tau_pdgid_mask) & (tau_zerfallskanäle[0]==0) & (tau_zerfallskanäle[1]==1) & (tau_zerfallskanäle[2]==1)])
+
     dy.fill(x=stable_logit(events_tt.run3_dnn_moe_hh[ak.any(events_tt.category_ids == id,axis=1)]),Zerfallskanal=r"$t\bar{t}$", weight=events_tt.event_weight[ak.any(events_tt.category_ids == id,axis=1)])
 
-    hh.fill(x=stable_logit(events_hh.run3_dnn_moe_hh[ak.any(events_hh.category_ids == id,axis=1)]),weight=events_hh.event_weight[ak.any(events_hh.category_ids == id,axis=1)])
+    hh_normalization_factor = np.sum(events_dy.event_weight[ak.any(events_hh.category_ids == id,axis=1)])/np.sum(events_hh.event_weight[ak.any(events_hh.category_ids == id,axis=1)])
+    hh.fill(x=stable_logit(events_hh.run3_dnn_moe_hh[ak.any(events_hh.category_ids == id,axis=1)]),weight=events_hh.event_weight[ak.any(events_hh.category_ids == id,axis=1)]*hh_normalization_factor)
 
     fig, ax1 = plt.subplots()
 
@@ -165,7 +172,8 @@ for i,id in enumerate([147,151,175,179,203,207],start=0): #id steht für categor
 
     #zweite Achse
     background_bins = np.sum(dy.values(),axis=0)
-    signal_bins = hh.values()
+    from IPython import embed; embed(header="MESSAGE Line 175 | File: hists_2_subdevided_logit.py")
+    signal_bins = hh.values()/hh_normalization_factor
     significance = signal_bins/np.sqrt(background_bins)
     significance = np.nan_to_num(significance, nan=0.0)  # Das ist hier möglich, da hier bei background=0 auch signal=0 gilt
     significance_total = round(np.sqrt(np.sum(significance**2)),3)
@@ -184,8 +192,7 @@ for i,id in enumerate([147,151,175,179,203,207],start=0): #id steht für categor
 
     plt.xlabel("Di-Higgs-outputnode of the DNN - corrected with logit function")
     plt.title(f"Histogram of DNN-outputnode $HH$ for dy,tt and hh simulatioins -{IDs[i]}-")
-    plt.savefig(f"plots/hists_HH-outputnode/segmenting_in_pdgid_and_tau/logit_binning/stacked_tt/category_id/{IDs[i]}.png", dpi=300, bbox_inches='tight')
-    plt.savefig(f"plots/hist_hhnode_stacked-tt/channel_unterteilung/logit_{id}-cat_id.png", dpi=300, bbox_inches='tight')
+    plt.savefig(f"plots/hists_HH-outputnode/segmenting_in_pdgid_and_tau/logit_binning/stacked_tt/category_id/{IDs[i]}.png", dpi=600, bbox_inches='tight')
     plt.figure()
 
     #histogramme für nächste iteration clearen

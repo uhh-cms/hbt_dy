@@ -170,7 +170,7 @@ for i,id in enumerate([147,151,175,179,203,207],start=0): #id steht für categor
 
     #weights definieren
     weights_ak = ak.zeros_like(events_dy.tau_genPartFlav) + events_dy.event_weight
-    weights = ak.flatten(weights_ak[dy_mask & id_mask])
+    weights = ak.flatten(weights_ak[(dy_mask) & (id_mask)])
 
     #alle category_ids zusammen nicht alle events glaub ich...
 
@@ -206,6 +206,11 @@ dy = Hist(
     hist.axis.StrCategory([], name="fakes_nr", growth=True),  #diese Achse wird später gestacked
     hist.axis.Regular(bins=100, start=0, stop=1, name="x")
 )
+#für die richtigen Farben:
+dy.fill(x=[1],fakes_nr="2_fake_taus")
+dy.fill(x=[1],fakes_nr="1_fake_tau")
+dy.fill(x=[1],fakes_nr="0_fake_taus")
+dy.reset()
 
 IDs=["etau__res1b__os__iso","etau__res2b__os__iso","mutau__res1b__os__iso","mutau__res2b__os__iso","tautau__res1b__os__iso","tautau__res2b__os__iso"]
 
@@ -221,16 +226,22 @@ for i,id in enumerate([147,151,175,179,203,207],start=0): #id steht für categor
     elif id in [203,207]:
         #weights_ak = ak.zeros_like(events_dy.tau_genPartFlav) + events_dy.event_weight
         fakes_sum = ak.sum(fakes, axis=1)
-        print(max(fakes_sum[id_mask]))
+        #Hist neu definieren, um Reihenfolge der Einträge zu bewahren
+        dy = Hist(
+        hist.axis.StrCategory([], name="fakes_nr", growth=True),  #diese Achse wird später gestacked
+        hist.axis.Regular(bins=100, start=0, stop=1, name="x")
+        )
 
-    dy.fill(x=events_dy.run3_dnn_moe_hh[id_mask & fakes_sum==0],fakes_nr="0_fake_tau", weight=weights[id_mask & fakes_sum==0])
-    dy.fill(x=events_dy.run3_dnn_moe_hh[id_mask & fakes_sum==1],fakes_nr="1_fake_tau", weight=weights[id_mask & fakes_sum==1])
-    dy.fill(x=events_dy.run3_dnn_moe_hh[id_mask & fakes_sum==2],fakes_nr="2_fake_tau", weight=weights[id_mask & fakes_sum==2])
-    dy.fill(x=events_dy.run3_dnn_moe_hh[id_mask & fakes_sum==3],fakes_nr="3_fake_tau", weight=weights[id_mask & fakes_sum==3])
+
+    dy.fill(x=events_dy.run3_dnn_moe_hh[(id_mask) & (fakes_sum==4)],fakes_nr="4_fake_taus", weight=weights[(id_mask) & (fakes_sum==4)])
+    dy.fill(x=events_dy.run3_dnn_moe_hh[(id_mask) & (fakes_sum==3)],fakes_nr="3_fake_taus", weight=weights[(id_mask) & (fakes_sum==3)])
+    dy.fill(x=events_dy.run3_dnn_moe_hh[(id_mask) & (fakes_sum==2)],fakes_nr="2_fake_taus", weight=weights[(id_mask) & (fakes_sum==2)])
+    dy.fill(x=events_dy.run3_dnn_moe_hh[(id_mask) & (fakes_sum==1)],fakes_nr="1_fake_tau", weight=weights[(id_mask) & (fakes_sum==1)])
+    dy.fill(x=events_dy.run3_dnn_moe_hh[(id_mask) & (fakes_sum==0)],fakes_nr="0_fake_taus", weight=weights[(id_mask) & (fakes_sum==0)])
     
     # Stack-Plot erstellen
     stack = dy.stack("fakes_nr")
-    stack.plot(stack=True, histtype="fill")
+    stack.plot(stack=True, histtype="fill",color=["tab:green","tab:orange","tab:blue"])
 
     plt.yscale('log')
     plt.legend()
